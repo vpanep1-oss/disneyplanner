@@ -1,4 +1,4 @@
-const CACHE_NAME = 'disney-planner-v1';
+const CACHE_NAME = 'disney-planner-v2';
 const URLS_TO_CACHE = [
   './index.html',
   './manifest.json',
@@ -23,15 +23,22 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
+// DEV: network-first so edits are always picked up immediately.
+// Before deploying, switch back to cache-first (see commented block below).
 self.addEventListener('fetch', event => {
-  // Only handle same-origin requests
   if (!event.request.url.startsWith(self.location.origin)) return;
+  event.respondWith(
+    fetch(event.request).catch(() => caches.match(event.request))
+  );
+});
 
+/* PRODUCTION cache-first strategy — swap back in before deploying:
+self.addEventListener('fetch', event => {
+  if (!event.request.url.startsWith(self.location.origin)) return;
   event.respondWith(
     caches.match(event.request).then(cached => {
       if (cached) return cached;
       return fetch(event.request).then(response => {
-        // Cache successful GET responses for the app shell
         if (event.request.method === 'GET' && response.status === 200) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
@@ -41,3 +48,4 @@ self.addEventListener('fetch', event => {
     }).catch(() => caches.match('./index.html'))
   );
 });
+*/

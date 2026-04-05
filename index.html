@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Disney Trip Planner</title>
+
+<!-- PWA: Web App Manifest -->
+<link rel="manifest" href="manifest.json"/>
+
+<!-- PWA: Theme color for browser chrome -->
+<meta name="theme-color" content="#0c447c"/>
+
+<!-- PWA: iOS home screen support -->
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="DisneyPlanner"/>
+<link rel="apple-touch-icon" href="icons/icon-180.png"/>
+
+<!-- PWA: General meta -->
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="description" content="Plan your Walt Disney World trip from Caribbean Beach Resort"/>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:#1a1a1a;background:#f5f4f0;padding:1rem;}
+.app{max-width:800px;margin:0 auto;padding:1rem 0;}
+.app-title{font-size:20px;font-weight:500;margin-bottom:1.25rem;color:#1a1a1a;}
+.tabs{display:flex;gap:6px;margin-bottom:1.5rem;flex-wrap:wrap;}
+.tab{padding:6px 14px;border-radius:8px;border:0.5px solid #bbb;background:transparent;color:#666;cursor:pointer;font-size:13px;font-family:inherit;}
+.tab.active{background:#e6f1fb;color:#0c447c;border-color:#85b7eb;font-weight:500;}
+.section{display:none;}.section.active{display:block;}
+h2{font-size:16px;font-weight:500;margin-bottom:1rem;color:#1a1a1a;}
+h3{font-size:14px;font-weight:500;margin-bottom:8px;color:#1a1a1a;}
+.card{background:#fff;border:0.5px solid #ddd;border-radius:12px;padding:1rem 1.25rem;margin-bottom:12px;}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;}
+.badge-purple{background:#EEEDFE;color:#3C3489;}
+.badge-amber{background:#FAEEDA;color:#633806;}
+.badge-green{background:#EAF3DE;color:#27500A;}
+.badge-gray{background:#F1EFE8;color:#444441;}
+.badge-red{background:#FCEBEB;color:#791F1F;}
+.badge-blue{background:#E6F1FB;color:#0C447C;}
+.ride-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid #eee;gap:8px;}
+.ride-row:last-child{border-bottom:none;}
+.ll-btn{font-size:11px;padding:3px 8px;border-radius:8px;border:0.5px solid #ccc;background:transparent;cursor:pointer;font-family:inherit;color:#666;white-space:nowrap;}
+.ll-btn.sel-mll{background:#EEEDFE;color:#3C3489;border-color:#AFA9EC;}
+.ll-btn.sel-ias{background:#FAEEDA;color:#633806;border-color:#EF9F27;}
+.ll-btn.sel-no{background:#F1EFE8;color:#444441;border-color:#B4B2A9;}
+select,input[type=text],input[type=date]{font-size:13px;padding:5px 8px;border-radius:8px;border:0.5px solid #bbb;background:#fff;color:#1a1a1a;font-family:inherit;}
+.metric{background:#f5f4f0;border-radius:8px;padding:12px;}
+.metric-label{font-size:12px;color:#666;margin-bottom:4px;}
+.metric-value{font-size:22px;font-weight:500;color:#1a1a1a;}
+.tip-box{background:#e6f1fb;border:0.5px solid #85b7eb;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#0c447c;}
+.crowd-bar{height:8px;border-radius:4px;background:#eee;overflow:hidden;margin-top:4px;}
+.crowd-fill{height:100%;border-radius:4px;}
+.park-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem;}
+.park-tab{padding:5px 12px;border-radius:8px;border:0.5px solid #bbb;background:transparent;cursor:pointer;font-size:12px;font-family:inherit;color:#666;}
+.park-tab.active{background:#e6f1fb;color:#0c447c;border-color:#85b7eb;}
+.sched-item{display:flex;gap:12px;padding:10px 0;border-bottom:0.5px solid #eee;align-items:flex-start;}
+.sched-item:last-child{border-bottom:none;}
+.sched-time{font-size:12px;color:#666;min-width:64px;padding-top:1px;}
+.sched-dot{width:10px;height:10px;border-radius:50%;margin-top:4px;flex-shrink:0;}
+.sched-sub{font-size:12px;color:#666;margin-top:2px;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:8px;}
+.cal-hdr{text-align:center;font-size:11px;color:#666;padding:4px 0;font-weight:500;}
+.cal-day{text-align:center;padding:6px 2px;border-radius:8px;font-size:12px;cursor:pointer;border:0.5px solid transparent;}
+.cal-day:hover{border-color:#bbb;}
+.cal-day.selected{border:2px solid #85b7eb;background:#e6f1fb;}
+.cal-day.today-marker{outline:2px solid #85b7eb;outline-offset:1px;}
+.cal-day .cn{font-weight:500;font-size:13px;}
+.cal-day .cl{font-size:10px;margin-top:1px;border-radius:3px;padding:1px 3px;}
+.day-card{background:#fff;border:0.5px solid #ddd;border-radius:12px;padding:10px 14px;margin-bottom:8px;}
+.day-card-header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.day-label{font-weight:500;font-size:13px;min-width:46px;}
+.smbtn{font-size:12px;padding:4px 10px;border-radius:8px;border:0.5px solid #bbb;background:transparent;cursor:pointer;color:#666;font-family:inherit;}
+.smbtn:hover{background:#f5f4f0;}
+.hotel-card{background:#fff;border:0.5px solid #ddd;border-radius:12px;padding:10px 14px;margin-bottom:10px;}
+.hotel-card-header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.badge-teal{background:#E1F5EE;color:#085041;}
+.badge-violet{background:#EDE9FE;color:#3C3489;}
+.trip-card{background:#fff;border:0.5px solid #ddd;border-radius:12px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.trip-card.active-trip{border-color:#85b7eb;background:#f0f7ff;}
+.trip-name{font-weight:500;font-size:13px;flex:1;min-width:120px;}
+.trip-meta{font-size:12px;color:#666;}
+@media(max-width:500px){.tabs{gap:4px;}.tab{font-size:12px;padding:5px 10px;}}
+#plan-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;align-items:center;justify-content:center;}
+#plan-modal-box{background:#fff;border-radius:16px;padding:20px 20px 16px;width:90%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.22);}
+#plan-modal-title{font-weight:600;font-size:15px;margin-bottom:14px;line-height:1.3;}
+.plan-modal-label{font-size:11px;color:#666;margin-bottom:3px;display:block;}
+.plan-modal-field{width:100%;padding:7px 10px;border:0.5px solid #ccc;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px;}
+.plan-item{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:0.5px solid #f0f0f0;}
+.plan-item-time{font-size:12px;font-weight:600;color:#0c447c;min-width:44px;padding-top:1px;}
+.plan-item-dot{width:8px;height:8px;border-radius:50%;background:#0c447c;flex-shrink:0;margin-top:4px;}
+.plan-item-body{flex:1;font-size:13px;}
+.plan-item-note{font-size:11px;color:#888;margin-top:2px;}
+</style>
+<!-- Firebase compat SDK (sync feature) -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+<div class="app">
+<div class="app-title" id="app-title">✨ Disney Trip Planner</div>
+<div id="sync-bar"></div>
+<div class="tabs">
+  <button class="tab active" onclick="showTab('itinerary',this)">Itinerary</button>
+  <button class="tab" onclick="showTab('parks',this)">Parks & Rides</button>
+  <button class="tab" onclick="showTab('ll',this)">Lightning Lanes</button>
+  <button class="tab" onclick="showTab('crowd',this)">Crowd Calendar</button>
+  <button class="tab" onclick="showTab('schedule',this)">Daily Schedule</button>
+  <button class="tab" onclick="showTab('optimizer',this)">Optimizer</button>
+  <button class="tab" onclick="showTab('tips',this)">Tips</button>
+  <button class="tab" onclick="showTab('shows',this)">Shows</button>
+  <button class="tab" onclick="showTab('water',this)">Water & Golf</button>
+  <button class="tab" onclick="showTab('hotel',this)">Hotel</button>
+  <button class="tab" onclick="showTab('trips',this)">My Trips</button>
+</div>
+<div id="tab-itinerary" class="section active"></div>
+<div id="tab-parks" class="section"></div>
+<div id="tab-ll" class="section"></div>
+<div id="tab-crowd" class="section"></div>
+<div id="tab-schedule" class="section"></div>
+<div id="tab-optimizer" class="section"></div>
+<div id="tab-tips" class="section"></div>
+<div id="tab-shows" class="section"></div>
+<div id="tab-water" class="section"></div>
+<div id="tab-hotel" class="section"></div>
+<div id="tab-trips" class="section"></div>
+</div>
+<div id="plan-modal-overlay" onclick="_planModalBgClick(event)">
+  <div id="plan-modal-box">
+    <div id="plan-modal-title"></div>
+    <label class="plan-modal-label">Add to which day?</label>
+    <select id="plan-modal-day" class="plan-modal-field"></select>
+    <label class="plan-modal-label">Time</label>
+    <input type="time" id="plan-modal-time" class="plan-modal-field"/>
+    <label class="plan-modal-label">Note (optional)</label>
+    <input type="text" id="plan-modal-note" class="plan-modal-field" placeholder="e.g. MLL booked, front row seats..."/>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button onclick="submitAddToPlan()" style="flex:1;padding:10px;background:#0c447c;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;">Add to plan</button>
+      <button onclick="closeAddToPlanModal()" style="flex:1;padding:10px;background:#f5f4f0;color:#444;border:none;border-radius:8px;font-size:13px;cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+</div>
+ 
+<script>
+// ── Firebase config — replace the YOUR_* values with your own from Firebase Console ──
+const FIREBASE_CONFIG={
+  apiKey:           'AIzaSyABF3nECzyHNDuqRMikllXtxULda9C0bpc',
+  authDomain:       'disney-planner-d8bf3.firebaseapp.com',
+  projectId:        'disney-planner-d8bf3',
+  storageBucket:    'disney-planner-d8bf3.firebasestorage.app',
+  messagingSenderId:'1088254309997',
+  appId:            '1:1088254309997:web:b326058e40183ab6e07164'
+};
+const PARKS=[
+  {id:'mk',name:'Magic Kingdom',short:'MK',icon:'🏰',baseCrowd:8,open:'9:00 AM',close:'11:00 PM',notes:'Highest crowds. Arrive 30–45 min before open.',
+   weekMod:[1,0,-1,-1,0,2,2],
+   rides:[
+    {name:'Tron Lightcycle Run',llType:'SP',mllTier:null,wait:90,ll:null},
+    {name:'Seven Dwarfs Mine Train',llType:'SP',mllTier:null,wait:75,ll:null},
+    {name:'Space Mountain',llType:'MLL',mllTier:1,wait:50,ll:null},
+    {name:"Tiana's Bayou Adventure",llType:'MLL',mllTier:1,wait:45,ll:null},
+    {name:"Peter Pan's Flight",llType:'MLL',mllTier:1,wait:60,ll:null},
+    {name:'Jungle Cruise',llType:'MLL',mllTier:1,wait:40,ll:null},
+    {name:'Haunted Mansion',llType:'MLL',mllTier:2,wait:40,ll:null},
+    {name:'Pirates of the Caribbean',llType:'MLL',mllTier:2,wait:20,ll:null},
+    {name:'Winnie the Pooh',llType:'MLL',mllTier:2,wait:25,ll:null},
+    {name:'Monsters Inc. Laugh Floor',llType:'MLL',mllTier:2,wait:15,ll:null},
+   ],
+   schedule:[
+    {time:'8:15 AM',title:'Arrive at park',sub:'Walk Main Street, grab coffee',dot:'#888780',tag:null},
+    {time:'9:00 AM',title:'Rope drop — Tron Lightcycle Run',sub:'IAS LL only — buy at 7 AM or standby at open',dot:'#BA7517',tag:'IAS'},
+    {time:'9:45 AM',title:'Seven Dwarfs Mine Train',sub:'Standby line shortest right after open',dot:'#BA7517',tag:'IAS'},
+    {time:'10:30 AM',title:'Space Mountain (MLL)',sub:'Book MLL #1 the moment Tron window starts',dot:'#534AB7',tag:'MLL'},
+    {time:'11:15 AM',title:"Peter Pan's Flight (MLL)",sub:'Book MLL #2 after redeeming Space Mountain',dot:'#534AB7',tag:'MLL'},
+    {time:'12:00 PM',title:'Lunch — Columbia Harbour House',sub:'Counter service, shorter lines at noon',dot:'#888780',tag:null},
+    {time:'1:00 PM',title:'Big Thunder Mountain (MLL)',sub:'Book MLL #3 after Peter Pan window',dot:'#534AB7',tag:'MLL'},
+    {time:'2:00 PM',title:'Haunted Mansion (MLL)',sub:'Afternoon MLL slot',dot:'#534AB7',tag:'MLL'},
+    {time:'3:30 PM',title:'Festival of Fantasy parade',sub:'Grab a spot 30 min early near hub',dot:'#888780',tag:null},
+    {time:'5:00 PM',title:'Tomorrowland & smaller rides',sub:'Buzz Lightyear, Carousel of Progress',dot:'#888780',tag:null},
+    {time:'7:00 PM',title:'Dinner — Be Our Guest or Liberty Tree',sub:'Book ADR 60 days out',dot:'#888780',tag:null},
+    {time:'9:30 PM',title:'Happily Ever After fireworks',sub:'Best view from Hub area near castle',dot:'#0C447C',tag:'must'},
+   ]},
+  {id:'ep',name:'EPCOT',short:'EP',icon:'🌍',baseCrowd:6,open:'9:00 AM',close:'9:00 PM',notes:'Best for evenings. World Showcase opens at 11. Skyliner from Caribbean Beach!',
+   weekMod:[0,-1,-2,-1,0,1,2],
+   rides:[
+    {name:'Guardians: Cosmic Rewind',llType:'SP',mllTier:null,wait:80,ll:null},
+    {name:'Test Track',llType:'MLL',mllTier:1,wait:55,ll:null},
+    {name:"Remy's Ratatouille Adventure",llType:'MLL',mllTier:1,wait:60,ll:null},
+    {name:'Frozen Ever After',llType:'MLL',mllTier:1,wait:65,ll:null},
+    {name:"Soarin'",llType:'MLL',mllTier:2,wait:45,ll:null},
+    {name:'Mission: SPACE',llType:'MLL',mllTier:2,wait:25,ll:null},
+    {name:'Spaceship Earth',llType:'MLL',mllTier:2,wait:20,ll:null},
+    {name:'Living with the Land',llType:'MLL',mllTier:2,wait:20,ll:null},
+   ],
+   schedule:[
+    {time:'8:45 AM',title:'Board Skyliner at Caribbean Beach',sub:'~15 min ride directly to EPCOT International Gateway',dot:'#1D9E75',tag:'skyliner'},
+    {time:'9:00 AM',title:'Guardians: Cosmic Rewind (IAS)',sub:'Buy IAS LL at 7 AM — sells out fast',dot:'#BA7517',tag:'IAS'},
+    {time:'9:45 AM',title:'Test Track (MLL)',sub:'Book MLL #1 at park open',dot:'#534AB7',tag:'MLL'},
+    {time:'10:30 AM',title:'Frozen Ever After (MLL)',sub:'Book MLL #2 after redeeming Test Track',dot:'#534AB7',tag:'MLL'},
+    {time:'11:15 AM',title:'World Showcase opens',sub:'Head to France first — Remy line builds fast',dot:'#888780',tag:null},
+    {time:'11:30 AM',title:"Remy's Ratatouille (MLL)",sub:'Book MLL #3 after Frozen window',dot:'#534AB7',tag:'MLL'},
+    {time:'12:30 PM',title:'Lunch in World Showcase',sub:'Mexico, Morocco, or France pavilion',dot:'#888780',tag:null},
+    {time:'2:00 PM',title:"Soarin' (MLL)",sub:'Afternoon slot',dot:'#534AB7',tag:'MLL'},
+    {time:'3:30 PM',title:'Explore Future World',sub:'Spaceship Earth, Journey Into Imagination',dot:'#888780',tag:null},
+    {time:'8:00 PM',title:'EPCOT Forever fireworks',sub:'Watch from World Showcase lagoon, then Skyliner home',dot:'#0F6E56',tag:'must'},
+   ]},
+  {id:'hs',name:'Hollywood Studios',short:'HS',icon:'🎬',baseCrowd:9,open:'8:00 AM',close:'10:00 PM',notes:'Busiest park. Rope drop Star Wars land essential. Skyliner access!',
+   weekMod:[1,0,-1,-1,0,2,2],
+   rides:[
+    {name:'Rise of the Resistance',llType:'SP',mllTier:null,wait:80,ll:null},
+    {name:'Slinky Dog Dash',llType:'MLL',mllTier:1,wait:75,ll:null},
+    {name:"Mickey & Minnie's Runaway Railway",llType:'MLL',mllTier:1,wait:55,ll:null},
+    {name:'Millennium Falcon: Smugglers Run',llType:'MLL',mllTier:1,wait:50,ll:null},
+    {name:'Tower of Terror',llType:'MLL',mllTier:2,wait:45,ll:null},
+    {name:'Toy Story Mania!',llType:'MLL',mllTier:2,wait:40,ll:null},
+    {name:'Star Tours',llType:'MLL',mllTier:2,wait:30,ll:null},
+    {name:'Indiana Jones Epic Stunt Show',llType:'MLL',mllTier:2,wait:20,ll:null},
+   ],
+   schedule:[
+    {time:'7:30 AM',title:'Board Skyliner at Caribbean Beach',sub:'~10 min ride to Hollywood Studios — fastest transit option',dot:'#1D9E75',tag:'skyliner'},
+    {time:'8:00 AM',title:'Rope drop — Rise of the Resistance',sub:'Do not stop. This line vanishes in 20 min',dot:'#534AB7',tag:'MLL'},
+    {time:'9:00 AM',title:'Millennium Falcon: Smugglers Run',sub:'Walk-on or short wait right after Rise',dot:'#888780',tag:null},
+    {time:'9:45 AM',title:'Slinky Dog Dash (MLL)',sub:'Book MLL #1 at park open',dot:'#534AB7',tag:'MLL'},
+    {time:'10:30 AM',title:"Mickey & Minnie's Runaway Railway (MLL)",sub:'Book MLL #2 after Slinky window',dot:'#534AB7',tag:'MLL'},
+    {time:'11:30 AM',title:'Lunch — Docking Bay 7',sub:'Unique food, moderate lines at 11:30',dot:'#888780',tag:null},
+    {time:'12:30 PM',title:'Tower of Terror (MLL)',sub:'Book MLL #3 for afternoon slot',dot:'#534AB7',tag:'MLL'},
+    {time:'1:30 PM',title:"Rock 'n' Roller Coaster (MLL)",sub:'Book MLL #4 after Tower window',dot:'#534AB7',tag:'MLL'},
+    {time:'3:00 PM',title:'Indiana Jones Stunt Show',sub:'Check times — usually 3–4 shows daily',dot:'#888780',tag:null},
+    {time:'8:30 PM',title:'Fantasmic!',sub:'Arrive 45 min early, then Skyliner home',dot:'#BA7517',tag:'must'},
+   ]},
+  {id:'ak',name:'Animal Kingdom',short:'AK',icon:'🦁',baseCrowd:6,open:'8:00 AM',close:'8:00 PM',notes:'Go early — animals and temps best in morning. Bus from Caribbean Beach.',
+   weekMod:[0,-1,-1,-1,0,1,1],
+   rides:[
+    {name:'Avatar Flight of Passage',llType:'SP',mllTier:null,wait:85,ll:null},
+    {name:"Na'vi River Journey",llType:'MLL',mllTier:0,wait:55,ll:null},
+    {name:'Expedition Everest',llType:'MLL',mllTier:0,wait:50,ll:null},
+    {name:'Kilimanjaro Safaris',llType:'MLL',mllTier:0,wait:40,ll:null},
+    {name:'Kali River Rapids',llType:'MLL',mllTier:0,wait:35,ll:null},
+    {name:'Feathered Friends in Flight',llType:'MLL',mllTier:0,wait:20,ll:null},
+   ],
+   schedule:[
+    {time:'7:15 AM',title:'Bus from Caribbean Beach to Animal Kingdom',sub:'Allow 30–40 min total including wait. Bus stop at resort main entrance.',dot:'#888780',tag:'bus'},
+    {time:'8:00 AM',title:'Rope drop — Avatar Flight of Passage',sub:'IAS LL option — buy at 7 AM or standby',dot:'#BA7517',tag:'IAS'},
+    {time:'9:00 AM',title:"Na'vi River Journey (MLL)",sub:'Book MLL #1 at open',dot:'#534AB7',tag:'MLL'},
+    {time:'9:45 AM',title:'Kilimanjaro Safaris (MLL)',sub:'Animals most active in the morning',dot:'#534AB7',tag:'MLL'},
+    {time:'11:00 AM',title:'Expedition Everest (MLL)',sub:'Book MLL #2 after Safaris window',dot:'#534AB7',tag:'MLL'},
+    {time:'12:00 PM',title:"Lunch — Satu'li Canteen (Pandora)",sub:'Best counter service in the park',dot:'#888780',tag:null},
+    {time:'1:00 PM',title:'Festival of the Lion King show',sub:'Check showtimes — usually every 30 min',dot:'#888780',tag:null},
+    {time:'2:30 PM',title:'Gorilla Falls Exploration Trail',sub:'Walk-through, no wait, great animals',dot:'#888780',tag:null},
+    {time:'5:30 PM',title:'Head to bus stop — park closes early',sub:'Last entry to major rides around 5:30 PM',dot:'#E24B4A',tag:'note'},
+   ]},
+  // ── Water Parks ──
+  {id:'tl',name:'Typhoon Lagoon',short:'TL',icon:'🌊',type:'water',baseCrowd:6,open:'10:00 AM',close:'5:00 PM',notes:'Arrive early for lounge chairs. Top slides: Crush n Gusher, Humunga Kowabunga, and Miss Adventure Falls.',
+   weekMod:[1,0,-1,-1,1,2,2],
+   rides:[
+    {name:'Miss Adventure Falls',llType:null,mllTier:null,wait:45,ll:null},
+    {name:'Crush n Gusher',llType:null,mllTier:null,wait:40,ll:null},
+    {name:'Humunga Kowabunga',llType:null,mllTier:null,wait:30,ll:null},
+    {name:'Bay Slides',llType:null,mllTier:null,wait:20,ll:null},
+    {name:'Castaway Creek Lazy River',llType:null,mllTier:null,wait:5,ll:null},
+    {name:'Typhoon Lagoon Wave Pool',llType:null,mllTier:null,wait:5,ll:null},
+    {name:'Ketchakiddee Creek Kids Area',llType:null,mllTier:null,wait:5,ll:null},
+   ],
+   schedule:[
+    {time:'9:30 AM',title:'Arrive and claim lounge chairs',sub:'Chairs go fast — arrive early, especially on weekends',dot:'#1D9E75',tag:null},
+    {time:'10:00 AM',title:'Crush n Gusher first',sub:'Most popular slide — shortest wait at rope drop',dot:'#1D9E75',tag:null},
+    {time:'10:30 AM',title:'Humunga Kowabunga speed slides',sub:'Must be 48 in. or taller. Extremely fast body slides.',dot:'#1D9E75',tag:null},
+    {time:'11:00 AM',title:'Miss Adventure Falls family raft',sub:'Great for all ages — longer ride worth the wait',dot:'#0C447C',tag:null},
+    {time:'12:00 PM',title:'Lunch at Leaning Palms',sub:'Eat during peak slide hours to avoid waits later',dot:'#888780',tag:null},
+    {time:'1:00 PM',title:'Castaway Creek lazy river',sub:'Relaxing float around the whole park',dot:'#888780',tag:null},
+    {time:'2:30 PM',title:'Re-ride favorites',sub:'Afternoon brings shorter slide lines park-wide',dot:'#1D9E75',tag:null},
+    {time:'4:00 PM',title:'Wave pool and wrap up',sub:'Park clears out — great time for the wave pool',dot:'#888780',tag:null},
+   ]},
+  {id:'bb',name:'Blizzard Beach',short:'BB',icon:'❄️',type:'water',baseCrowd:5,open:'10:00 AM',close:'5:00 PM',notes:'Ski-resort themed waterpark. Home to Summit Plummet — one of the fastest waterslides in the world.',
+   weekMod:[1,0,-1,-1,1,2,2],
+   rides:[
+    {name:'Summit Plummet',llType:null,mllTier:null,wait:50,ll:null},
+    {name:'Slush Gusher',llType:null,mllTier:null,wait:30,ll:null},
+    {name:'Teamboat Springs Family Raft',llType:null,mllTier:null,wait:35,ll:null},
+    {name:'Toboggan Racers',llType:null,mllTier:null,wait:20,ll:null},
+    {name:'Cross Country Creek Lazy River',llType:null,mllTier:null,wait:5,ll:null},
+    {name:'Melt-Away Bay Wave Pool',llType:null,mllTier:null,wait:5,ll:null},
+    {name:'Ski Patrol Training Camp',llType:null,mllTier:null,wait:10,ll:null},
+   ],
+   schedule:[
+    {time:'9:30 AM',title:'Arrive and claim chairs',sub:'Beach chairs disappear quickly on busy days',dot:'#534AB7',tag:null},
+    {time:'10:00 AM',title:'Summit Plummet first',sub:'120-ft freefall slide — lines build fast after opening',dot:'#534AB7',tag:null},
+    {time:'10:30 AM',title:'Slush Gusher and Toboggan Racers',sub:'High-speed slides near the summit',dot:'#534AB7',tag:null},
+    {time:'11:00 AM',title:'Teamboat Springs family raft',sub:'Longest family raft ride on property — great for groups',dot:'#534AB7',tag:null},
+    {time:'12:30 PM',title:'Lunch at Lottawata Lodge',sub:'Main food court at base of the mountain',dot:'#888780',tag:null},
+    {time:'1:30 PM',title:'Cross Country Creek lazy river',sub:'Float around the whole park and cool off',dot:'#888780',tag:null},
+    {time:'2:30 PM',title:'Re-ride summit slides',sub:'Afternoon brings shorter lines on most slides',dot:'#534AB7',tag:null},
+    {time:'4:00 PM',title:'Melt-Away Bay wave pool',sub:'Relax and wind down before heading out',dot:'#888780',tag:null},
+   ]},
+  // ── Mini Golf ──
+  {id:'fg',name:'Fantasia Gardens Mini Golf',short:'Fantasia Golf',icon:'⛳',type:'golf',baseCrowd:3,open:'10:00 AM',close:'11:00 PM',notes:'Two 18-hole courses near Swan and Dolphin. No reservations — walk up only.',
+   weekMod:[0,0,-1,-1,0,1,1],
+   rides:[
+    {name:'Fantasia Gardens Course',llType:null,mllTier:null,wait:10,ll:null},
+    {name:'Fantasia Fairways Course',llType:null,mllTier:null,wait:15,ll:null},
+   ],
+   schedule:[
+    {time:'Anytime',title:'Walk up — no reservation needed',sub:'Pay at the booth. Two 18-hole courses available.',dot:'#27500A',tag:null},
+    {time:'Morning',title:'Quietest time to play',sub:'Best to arrive before noon on busy days',dot:'#27500A',tag:null},
+    {time:'~1 hour',title:'Fantasia Gardens course',sub:'Fantasia-themed holes, moderate difficulty. Great for all skill levels.',dot:'#27500A',tag:null},
+    {time:'~1.5 hrs',title:'Fantasia Fairways course',sub:'More challenging traditional-style holes. Better for experienced players.',dot:'#27500A',tag:null},
+    {time:'Evening',title:'Well-lit for evening play',sub:'Open until 11 PM — great after a theme park evening',dot:'#27500A',tag:null},
+   ]},
+  {id:'ws',name:'Winter Summerland Mini Golf',short:'Winter Golf',icon:'🎄',type:'golf',baseCrowd:3,open:'10:00 AM',close:'11:00 PM',notes:'Santa-themed mini golf near Blizzard Beach. Two courses: Winter and Summer. Walk-up only.',
+   weekMod:[0,0,-1,-1,0,1,1],
+   rides:[
+    {name:'Winter Course',llType:null,mllTier:null,wait:10,ll:null},
+    {name:'Summer Course',llType:null,mllTier:null,wait:10,ll:null},
+   ],
+   schedule:[
+    {time:'Anytime',title:'Walk up — no reservation needed',sub:'Two courses: Winter and Summer themes',dot:'#E24B4A',tag:null},
+    {time:'Morning',title:'Least crowded before noon',sub:'Usually empty before 11 AM most days',dot:'#E24B4A',tag:null},
+    {time:'~1 hour',title:'Winter course',sub:'Holiday-themed with Christmas decorations and obstacles',dot:'#E24B4A',tag:null},
+    {time:'~1 hour',title:'Summer course',sub:'Beach and summer theme — same holes, different decor',dot:'#E24B4A',tag:null},
+    {time:'Evening',title:'Open until 11 PM',sub:'Festive holiday atmosphere especially after dark',dot:'#E24B4A',tag:null},
+   ]},
+];
+ 
+const HOTELS=[
+  // Value
+  {id:'allstar_movies',name:"Disney's All-Star Movies Resort",short:'All-Star Movies',category:'Value',icon:'🎬',transit:{mk:{mode:'bus',time:'~30 min'},ep:{mode:'bus',time:'~35 min'},hs:{mode:'bus',time:'~20 min'},ak:{mode:'bus',time:'~15 min'}}},
+  {id:'allstar_music',name:"Disney's All-Star Music Resort",short:'All-Star Music',category:'Value',icon:'🎵',transit:{mk:{mode:'bus',time:'~30 min'},ep:{mode:'bus',time:'~35 min'},hs:{mode:'bus',time:'~20 min'},ak:{mode:'bus',time:'~15 min'}}},
+  {id:'allstar_sports',name:"Disney's All-Star Sports Resort",short:'All-Star Sports',category:'Value',icon:'⚽',transit:{mk:{mode:'bus',time:'~30 min'},ep:{mode:'bus',time:'~35 min'},hs:{mode:'bus',time:'~20 min'},ak:{mode:'bus',time:'~15 min'}}},
+  {id:'pop_century',name:"Disney's Pop Century Resort",short:'Pop Century',category:'Value',icon:'🎨',transit:{mk:{mode:'bus',time:'~35 min'},ep:{mode:'skyliner',time:'~15 min'},hs:{mode:'skyliner',time:'~10 min'},ak:{mode:'bus',time:'~30 min'}}},
+  {id:'art_of_animation',name:"Disney's Art of Animation Resort",short:'Art of Animation',category:'Value',icon:'🖌️',transit:{mk:{mode:'bus',time:'~35 min'},ep:{mode:'skyliner',time:'~15 min'},hs:{mode:'skyliner',time:'~10 min'},ak:{mode:'bus',time:'~30 min'}}},
+  // Moderate
+  {id:'caribbean_beach',name:"Disney's Caribbean Beach Resort",short:'Caribbean Beach',category:'Moderate',icon:'🏖️',transit:{mk:{mode:'bus',time:'~35 min'},ep:{mode:'skyliner',time:'~15 min'},hs:{mode:'skyliner',time:'~10 min'},ak:{mode:'bus',time:'~35 min'}}},
+  {id:'coronado_springs',name:"Disney's Coronado Springs Resort",short:'Coronado Springs',category:'Moderate',icon:'🌵',transit:{mk:{mode:'bus',time:'~35 min'},ep:{mode:'bus',time:'~30 min'},hs:{mode:'bus',time:'~25 min'},ak:{mode:'bus',time:'~20 min'}}},
+  {id:'port_orleans_french',name:"Disney's Port Orleans – French Quarter",short:'Port Orleans FQ',category:'Moderate',icon:'⚜️',transit:{mk:{mode:'bus',time:'~35 min'},ep:{mode:'bus',time:'~35 min'},hs:{mode:'bus',time:'~30 min'},ak:{mode:'bus',time:'~35 min'}}},
+  {id:'port_orleans_riverside',name:"Disney's Port Orleans – Riverside",short:'Port Orleans Riverside',category:'Moderate',icon:'🌊',transit:{mk:{mode:'bus',time:'~35 min'},ep:{mode:'bus',time:'~35 min'},hs:{mode:'bus',time:'~30 min'},ak:{mode:'bus',time:'~35 min'}}},
+  // Deluxe
+  {id:'grand_floridian',name:"Disney's Grand Floridian Resort & Spa",short:'Grand Floridian',category:'Deluxe',icon:'👑',transit:{mk:{mode:'monorail',time:'~5 min'},ep:{mode:'monorail',time:'~15 min'},hs:{mode:'bus',time:'~25 min'},ak:{mode:'bus',time:'~30 min'}}},
+  {id:'contemporary',name:"Disney's Contemporary Resort",short:'Contemporary',category:'Deluxe',icon:'🏙️',transit:{mk:{mode:'walk',time:'~10 min'},ep:{mode:'monorail',time:'~20 min'},hs:{mode:'bus',time:'~25 min'},ak:{mode:'bus',time:'~30 min'}}},
+  {id:'polynesian',name:"Disney's Polynesian Village Resort",short:'Polynesian',category:'Deluxe',icon:'🌺',transit:{mk:{mode:'monorail',time:'~5 min'},ep:{mode:'monorail',time:'~15 min'},hs:{mode:'bus',time:'~25 min'},ak:{mode:'bus',time:'~30 min'}}},
+  {id:'boardwalk',name:"Disney's BoardWalk Inn",short:'BoardWalk Inn',category:'Deluxe',icon:'🎡',transit:{mk:{mode:'bus',time:'~30 min'},ep:{mode:'walk',time:'~5 min'},hs:{mode:'walk',time:'~15 min'},ak:{mode:'bus',time:'~25 min'}}},
+  {id:'yacht_club',name:"Disney's Yacht Club Resort",short:'Yacht Club',category:'Deluxe',icon:'⛵',transit:{mk:{mode:'bus',time:'~30 min'},ep:{mode:'walk',time:'~5 min'},hs:{mode:'walk',time:'~15 min'},ak:{mode:'bus',time:'~25 min'}}},
+  {id:'beach_club',name:"Disney's Beach Club Resort",short:'Beach Club',category:'Deluxe',icon:'🏄',transit:{mk:{mode:'bus',time:'~30 min'},ep:{mode:'walk',time:'~5 min'},hs:{mode:'walk',time:'~15 min'},ak:{mode:'bus',time:'~25 min'}}},
+  {id:'wilderness_lodge',name:"Disney's Wilderness Lodge",short:'Wilderness Lodge',category:'Deluxe',icon:'🌲',transit:{mk:{mode:'boat',time:'~20 min'},ep:{mode:'bus',time:'~35 min'},hs:{mode:'bus',time:'~30 min'},ak:{mode:'bus',time:'~40 min'}}},
+  {id:'animal_kingdom_lodge',name:"Disney's Animal Kingdom Lodge",short:'AK Lodge',category:'Deluxe',icon:'🦒',transit:{mk:{mode:'bus',time:'~35 min'},ep:{mode:'bus',time:'~35 min'},hs:{mode:'bus',time:'~25 min'},ak:{mode:'bus',time:'~10 min'}}},
+  // DVC
+  {id:'riviera',name:"Disney's Riviera Resort",short:'Riviera',category:'DVC',icon:'🏛️',transit:{mk:{mode:'bus',time:'~35 min'},ep:{mode:'skyliner',time:'~15 min'},hs:{mode:'skyliner',time:'~10 min'},ak:{mode:'bus',time:'~35 min'}}},
+  {id:'saratoga_springs',name:"Disney's Saratoga Springs Resort",short:'Saratoga Springs',category:'DVC',icon:'🐴',transit:{mk:{mode:'bus',time:'~30 min'},ep:{mode:'bus',time:'~25 min'},hs:{mode:'boat',time:'~15 min'},ak:{mode:'bus',time:'~30 min'}}},
+  {id:'old_key_west',name:"Disney's Old Key West Resort",short:'Old Key West',category:'DVC',icon:'🔑',transit:{mk:{mode:'bus',time:'~35 min'},ep:{mode:'bus',time:'~30 min'},hs:{mode:'bus',time:'~30 min'},ak:{mode:'bus',time:'~35 min'}}},
+  {id:'bay_lake_tower',name:'Bay Lake Tower at Contemporary',short:'Bay Lake Tower',category:'DVC',icon:'🏗️',transit:{mk:{mode:'walk',time:'~10 min'},ep:{mode:'monorail',time:'~20 min'},hs:{mode:'bus',time:'~25 min'},ak:{mode:'bus',time:'~30 min'}}},
+  {id:'boardwalk_villas',name:"Disney's BoardWalk Villas",short:'BoardWalk Villas',category:'DVC',icon:'🎡',transit:{mk:{mode:'bus',time:'~30 min'},ep:{mode:'walk',time:'~5 min'},hs:{mode:'walk',time:'~15 min'},ak:{mode:'bus',time:'~25 min'}}},
+];
+
+const TRANSIT={
+  mk:{mode:'bus',time:'30–45 min',freq:'Every 20 min',tip:'Bus departs from main bus stop. Allow extra time during rope drop hours (8–9 AM).'},
+  ep:{mode:'skyliner',time:'~15 min',freq:'Continuous',tip:'Board at Caribbean Beach Skyliner station. No wait most times — direct to EPCOT International Gateway.'},
+  hs:{mode:'skyliner',time:'~10 min',freq:'Continuous',tip:'Fastest transit from Caribbean Beach. Board at resort station, direct to HS. Get there early for rope drop.'},
+  ak:{mode:'bus',time:'30–40 min',freq:'Every 20 min',tip:'Bus from main bus stop. Early morning buses can be crowded on busy days — arrive at stop 40 min before park open.'},
+};
+ 
+const TIPS=[
+  {cat:'Rope Drop',icon:'🌅',tips:['Arrive 45–60 min before open for rope drop.','Hollywood Studios & Magic Kingdom reward rope drop most.','Use Early Entry (hotel guests) to knock out 1–2 big rides early.']},
+  {cat:'MLL booking',icon:'⚡',tips:['Book your first MLL at 7 AM (hotel guests) or park open.','Book your next MLL as soon as your current window starts — not after you ride.','Average cost: $16–$35 per person per day.']},
+  {cat:'IAS Lightning Lane',icon:'💎',tips:['IAS opens at 7 AM for hotel guests, park open for others.','Top IAS: Tron, Seven Dwarfs, Flight of Passage, Guardians (EPCOT).','You can only hold 1 IAS at a time.','Budget $15–$30 per person per IAS ride.']},
+  {cat:'Transit from Caribbean Beach',icon:'🚡',tips:['EPCOT & Hollywood Studios: take the Skyliner — fastest, no bus needed.','Magic Kingdom & Animal Kingdom: bus from main bus stop.','Allow 30–45 min for buses, 10–15 min for Skyliner.','Skyliner closes in lightning — have a bus backup plan.']},
+  {cat:'Park order strategy',icon:'🗺️',tips:['Do Hollywood Studios on a weekday — weekends are brutal.','EPCOT is great for evenings.','Animal Kingdom closes early — don\'t save it for last.','Magic Kingdom is worth 2 days with young kids.']},
+  {cat:'Park hopping',icon:'🔀',tips:['Park hopping allowed after 2:00 PM.','Animal Kingdom morning → Magic Kingdom evening is a great combo.','Hollywood Studios morning → EPCOT evening for World Showcase dining.']},
+  {cat:'Wait time tricks',icon:'⏱️',tips:['Single rider at Test Track, Expedition Everest, Rock \'n\' Roller Coaster.','Lines drop dramatically in the rain.','Last 2 hours of the day: waits fall at most attractions.']},
+];
+ 
+const THEME_PARKS=PARKS.filter(p=>!p.type);
+const SHOWS={
+  mk:[
+    {name:'Let the Magic Begin',icon:'🌟',llType:null,times:['At park open'],tip:'Welcome show at Cinderella Castle forecourt just before park officially opens. Mickey and friends greet guests. Arrive on Main Street 15–20 min before opening to get a good spot. Quick show — then head straight to your first ride.'},
+    {name:"Mickey's Magical Friendship Faire",icon:'🎭',llType:null,times:['10:30 AM','12:00 PM','2:00 PM','4:30 PM'],tip:'Stage show at Cinderella Castle forecourt featuring Mickey, Minnie, Tiana, Rapunzel, Anna, Elsa, and Olaf. Arrive 15 min early for a good view from the hub. Outdoor show — subject to weather cancellation.'},
+    {name:'Festival of Fantasy Parade',icon:'🎺',llType:'MLL',times:['3:00 PM'],tip:'MLL reserved viewing party available. Best free spots: Main Street hub or Frontierland. Arrive 30–45 min early for standby. Floats include Tangled, Brave, Little Mermaid, Sleeping Beauty, and more.'},
+    {name:'Disney Adventure Friends Cavalcade',icon:'🎉',llType:null,times:['Multiple times daily — check app'],tip:'Moving cavalcade along the parade route featuring the largest character lineup of any cavalcade, including Bruno from Encanto, Miguel from Coco, and many more. Check My Disney Experience for daily times — runs multiple times throughout the day.'},
+    {name:'Disney Starlight: Dream the Night Away',icon:'✨',llType:null,times:['~8:15 PM','~10:30 PM'],tip:'Brand new nighttime parade debuted July 2025 — the first nightly parade at Magic Kingdom since 2016. Inspired by the Main Street Electrical Parade, featuring floats from Moana, Frozen, Encanto, Peter Pan, Coco, and more, brought to life by the Blue Fairy. Best spots: Main Street hub, Liberty Square, Frontierland. Arrive 30 min early for a good spot. Two nightly performances most nights — confirm times in the My Disney Experience app.'},
+    {name:'Happily Ever After (Fireworks)',icon:'🎆',llType:'MLL',times:['~9:00 PM'],tip:'MLL reserved viewing available. Best free spot: center hub in front of castle. One of the best nighttime shows at WDW. Showtime shifts earlier in fall/winter — always confirm in the app.'},
+  ],
+  ep:[
+    {name:'Voices of Liberty',icon:'🎤',llType:null,times:['11:30 AM','12:30 PM','1:30 PM','2:30 PM','4:00 PM'],tip:'A cappella group performing American classics inside the American Adventure rotunda. Free, excellent, and only about 10 minutes. A hidden gem — absolutely worth a stop if you pass by.'},
+    {name:'Canada Pavilion Live Entertainment',icon:'🍁',llType:null,times:['2:15 PM','3:30 PM','5:00 PM'],tip:'Live Canadian bands perform at Canada Mill Stage in World Showcase. Acts rotate seasonally — check the My Disney Experience app for the current performer. Great atmosphere, no wait required.'},
+    {name:'Germany Gazebo Entertainment',icon:'🇩🇪',llType:null,times:['Multiple times daily — check app'],tip:'Rotating live entertainment at the Germany Gazebo in World Showcase. Acts change seasonally and range from folk music to comedy performers. Check My Disney Experience for current act and times.'},
+    {name:'World Showcase Players (UK Pavilion)',icon:'🎩',llType:null,times:['Multiple times daily — check app'],tip:"Beloved improv comedy troupe performing audience-interactive shows in the UK Pavilion courtyard. One of EPCOT's most underrated entertainment offerings. No reservation needed — just show up and enjoy."},
+    {name:'Luminous: The Symphony of Us',icon:'🎆',llType:null,times:['~9:00 PM'],tip:'Nightly fireworks and water show over World Showcase Lagoon. Watch from anywhere along the World Showcase promenade — no reserved spot or LL needed. Take the Skyliner home after the show to beat the crowds.'},
+  ],
+  hs:[
+    {name:'Indiana Jones Epic Stunt Spectacular',icon:'🎬',llType:null,times:['11:30 AM','1:30 PM','3:30 PM'],tip:'Arrive 15 min early. Audience volunteers are picked before the show from the front rows — sit there if you want a chance. Outdoor amphitheater — bring water in hot weather. One of the longest-running shows at WDW.'},
+    {name:'Beauty and the Beast – Live on Stage',icon:'🌹',llType:null,times:['11:00 AM','1:00 PM','2:00 PM','4:00 PM','5:00 PM'],tip:'30-min Broadway-style show at Theater of the Stars on Sunset Boulevard. Outdoor amphitheater with covered seating — bring water in summer heat. All ages, great for families.'},
+    {name:'For the First Time in Forever: A Frozen Sing-Along',icon:'❄️',llType:'MLL',times:['9:30 AM','10:30 AM','11:30 AM','12:30 PM','1:30 PM','2:30 PM','3:30 PM','4:30 PM','5:30 PM','6:30 PM'],tip:'MLL available. Fully indoor and air-conditioned — great midday cool-down. Interactive sing-along with two comedic royal historians. Runs almost every 30 minutes throughout the day.'},
+    {name:'Star Wars: A Galaxy Far, Far Away',icon:'⭐',llType:null,times:['10:45 AM','12:15 PM','2:00 PM','5:15 PM'],tip:'Live stage show at the Chinese Theatre steps featuring character appearances from across the Star Wars saga. No wait required — just find a spot along the open plaza.'},
+    {name:'Disney Villains: Unfairly Ever After',icon:'🪞',llType:null,times:['11:10 AM','11:50 AM','12:30 PM','1:10 PM','1:50 PM','2:30 PM','3:10 PM','3:50 PM','4:30 PM','5:10 PM','5:50 PM','6:30 PM','7:10 PM','7:50 PM'],tip:"New stage show at Sunset Showcase on Sunset Boulevard, near Rock 'n' Roller Coaster. Cruella de Vil, Captain Hook, and Maleficent each plead their case to the audience via the Magic Mirror. ~18 min runtime, no Lightning Lane needed — walk right in. Runs every 40 min throughout the day. Great air-conditioned midday break."},
+    {name:'The Little Mermaid – A Musical Adventure',icon:'🐠',llType:null,times:['10:00 AM','10:35 AM','11:10 AM','11:45 AM','12:20 PM','12:55 PM','1:30 PM','2:05 PM','2:40 PM','3:15 PM','3:50 PM','4:25 PM','5:00 PM','5:35 PM','6:10 PM','6:45 PM','7:20 PM','7:55 PM'],tip:'New musical stage show — check My Disney Experience for current location and details. Runs very frequently throughout the day, making it easy to catch at any point.'},
+    {name:'Disney Movie Magic',icon:'🎞️',llType:null,times:['After dark — check app'],tip:'Short pre-show projection experience on the Chinese Theatre façade before Wonderful World of Animation. Features memorable scenes from Indiana Jones, Pirates of the Caribbean, and more. About 10 minutes — a great spot to grab before the main nighttime show.'},
+    {name:'Wonderful World of Animation',icon:'🌙',llType:null,times:['After dark — check app'],tip:'Nighttime projection spectacular on the Chinese Theatre façade celebrating 90+ years of Disney and Pixar animation. Sequences include Sleeping Beauty, The Incredibles, Coco, and more. No Lightning Lane — just find a spot in the open plaza. Check My Disney Experience for exact showtime.'},
+    {name:'Fantasmic!',icon:'🌊',llType:'MLL',times:['~8:30 PM','~10:00 PM'],tip:'MLL reserved seating is strongly recommended — fills fast. One of the best shows on property featuring water screens, live characters, pyrotechnics, and projections. Arrive 45 min early without MLL. Two shows on most nights — confirm in the app.'},
+  ],
+  ak:[
+    {name:'UP! A Great Bird Adventure',icon:'🦜',llType:null,times:['9:30 AM','11:00 AM','12:30 PM','2:00 PM','3:30 PM'],tip:'Outdoor show with live birds of prey plus Dug and Russell from UP. Arrive 15–20 min early for a good seat. Morning shows are coolest temperature-wise. One of the most charming shows in any Disney park.'},
+    {name:'Finding Nemo: The Big Blue…and Beyond!',icon:'🐡',llType:null,times:['11:30 AM','1:00 PM','2:30 PM','4:00 PM'],tip:'Indoor theater show with live performers, puppets, and innovative staging retelling Finding Nemo. Great air-conditioned break — walk in a few minutes before showtime. About 25 minutes long.'},
+    {name:'Festival of the Lion King',icon:'🦁',llType:'MLL',times:['Every 30 min from 9:00 AM'],tip:'MLL available. Widely considered one of the best shows at all of Walt Disney World. High-energy, 30-min Broadway-caliber production with singers, dancers, acrobats, fire performers, and massive character floats. Use MLL or arrive 15–20 min early. Do not skip this.'},
+    {name:'Winged Encounters – The Kingdom Takes Flight',icon:'🦅',llType:null,times:['Multiple times daily — check app'],tip:'Free-flying macaws soar over Discovery Island in this brief outdoor animal experience with keeper commentary. Walk-by format near the Tree of Life — no seating required, just watch from anywhere nearby. Check My Disney Experience for daily times.'},
+    {name:'Tree of Life Awakenings',icon:'🌳',llType:null,times:['After dark, every ~10 min until close'],tip:'Free projection show on the Tree of Life after sunset. No tickets or LL needed — simply walk the Discovery Island paths at nightfall and watch the animal spirits come alive on the trunk. Occurs approximately every 10 minutes until park closes. A peaceful, magical way to end the night.'},
+  ],
+};
+ 
+let days=[
+  {id:1,label:'Day 1',park:'mk',hop:'',note:'',date:''},
+  {id:2,label:'Day 2',park:'hs',hop:'',note:'',date:''},
+  {id:3,label:'Day 3',park:'ep',hop:'',note:'',date:''},
+  {id:4,label:'Day 4',park:'ak',hop:'',note:'',date:''},
+];
+let nextId=5,llPark='mk',schedDay=null,calMonth=null,calYear=null,calSelDay=null,calParkId='mk',optStartDate='',showsPark='mk';
+let hotels=[],hotelNextId=1;
+let _planPending=null;
+let db=null,syncCode=null,syncStatus='idle',syncUnsubscribe=null,_lastWriteTime=0;
+ 
+function pById(id){return PARKS.find(p=>p.id===id);}
+function crowdInfo(n){
+  n=Math.max(1,Math.min(10,n));
+  if(n>=9)return{bg:'#FCEBEB',text:'#791F1F',fill:'#E24B4A',label:'Very High'};
+  if(n>=7)return{bg:'#FAEEDA',text:'#633806',fill:'#EF9F27',label:'High'};
+  if(n>=5)return{bg:'#EAF3DE',text:'#27500A',fill:'#639922',label:'Moderate'};
+  return{bg:'#E1F5EE',text:'#085041',fill:'#1D9E75',label:'Low'};
+}
+function getCrowd(parkId,dateStr,dowOvr){
+  const park=pById(parkId);if(!park)return 6;
+  let dow=dowOvr!=null?dowOvr:3;
+  if(dateStr){const d=new Date(dateStr+'T12:00:00');if(!isNaN(d))dow=d.getDay();}
+  return Math.max(1,Math.min(10,park.baseCrowd+(park.weekMod[dow]||0)));
+}
+function parkOpts(sel,none){
+  let o=none?'<option value="">— none —</option>':'';
+  // Theme parks group
+  o+='<optgroup label="Theme Parks">';
+  THEME_PARKS.forEach(p=>{o+=`<option value="${p.id}"${p.id===sel?' selected':''}>${p.icon} ${p.name}</option>`;});
+  o+='</optgroup>';
+  if(!none){
+    // Water parks
+    const wps=PARKS.filter(p=>p.type==='water');
+    if(wps.length){o+='<optgroup label="Water Parks">';wps.forEach(p=>{o+=`<option value="${p.id}"${p.id===sel?' selected':''}>${p.icon} ${p.name}</option>`;});o+='</optgroup>';}
+    // Golf
+    const gps=PARKS.filter(p=>p.type==='golf');
+    if(gps.length){o+='<optgroup label="Mini Golf">';gps.forEach(p=>{o+=`<option value="${p.id}"${p.id===sel?' selected':''}>${p.icon} ${p.name}</option>`;});o+='</optgroup>';}
+  }
+  return o;
+}
+function transitColors(mode){
+  if(mode==='skyliner')return{bg:'#E1F5EE',col:'#085041'};
+  if(mode==='monorail')return{bg:'#EDE9FE',col:'#3C3489'};
+  if(mode==='walk')return{bg:'#EAF3DE',col:'#27500A'};
+  if(mode==='boat')return{bg:'#E6F1FB',col:'#0C447C'};
+  return{bg:'#F1EFE8',col:'#444441'};
+}
+function transitIcon(mode){
+  if(mode==='skyliner')return'🚅 Skyliner';
+  if(mode==='monorail')return'🚝 Monorail';
+  if(mode==='walk')return'🚶 Walk';
+  if(mode==='boat')return'⛵ Boat';
+  return'🚌 Bus';
+}
+
+function getHotelForDate(dateStr){
+  if(!dateStr||!hotels.length)return null;
+  return hotels.find(h=>h.checkIn<=dateStr&&h.checkOut>=dateStr)||null;
+}
+
+function getTransitInfo(parkId,dateStr){
+  const activeStay=dateStr?getHotelForDate(dateStr):null;
+  if(activeStay){
+    const hotel=HOTELS.find(h=>h.id===activeStay.resortId);
+    if(hotel&&hotel.transit[parkId]){
+      const t=hotel.transit[parkId];
+      const parkNames={mk:'Magic Kingdom',ep:'EPCOT',hs:'Hollywood Studios',ak:'Animal Kingdom'};
+      const pName=parkNames[parkId]||parkId;
+      const freq={bus:'Every 20 min',skyliner:'Continuous',monorail:'Continuous',walk:'Anytime',boat:'Every 30 min'}[t.mode]||'Every 20 min';
+      const tip={bus:`Bus from ${hotel.short} main bus stop. Allow extra time during rope drop hours.`,skyliner:`Board Skyliner at ${hotel.short} station, direct to ${pName}.`,monorail:`Monorail from ${hotel.short} station to ${pName}.`,walk:`Short walk from ${hotel.short} to ${pName} entrance.`,boat:`Boat launch from ${hotel.short} dock to ${pName}.`}[t.mode]||'';
+      return{mode:t.mode,time:t.time,freq,tip,hotelName:hotel.short,hotelIcon:hotel.icon};
+    }
+  }
+  // fall back to Caribbean Beach defaults
+  return{...TRANSIT[parkId],hotelName:'your resort',hotelIcon:'🏖️'};
+}
+
+function transitBadge(parkId,dateStr){
+  const t=getTransitInfo(parkId,dateStr);if(!t)return'';
+  const c=transitColors(t.mode);
+  return`<span class="badge" style="background:${c.bg};color:${c.col};">${transitIcon(t.mode)} ${t.time}</span>`;
+}
+ 
+function showTab(t,btn){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  document.getElementById('tab-'+t).classList.add('active');
+  ({itinerary:renderItinerary,parks:renderParks,ll:renderLL,crowd:renderCrowd,schedule:renderSchedule,optimizer:renderOptimizer,tips:renderTips,shows:renderShows,water:renderWater,hotel:renderHotel,trips:renderTrips}[t]||function(){})();
+}
+function goToSchedule(dayId){
+  schedDay=dayId;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab')[4].classList.add('active');
+  document.getElementById('tab-schedule').classList.add('active');
+  renderSchedule();
+}
+function goToItinerary(){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab')[0].classList.add('active');
+  document.getElementById('tab-itinerary').classList.add('active');
+  renderItinerary();
+}
+ 
+function renderItinerary(){
+  const el=document.getElementById('tab-itinerary');
+  el.innerHTML=`<h2>Trip itinerary</h2>`+days.map(d=>{
+    const park=pById(d.park);const hop=d.hop?pById(d.hop):null;
+    const crowd=d.date?getCrowd(d.park,d.date):null;
+    const ci=crowd!=null?crowdInfo(crowd):null;
+    const activeStay=d.date?getHotelForDate(d.date):null;
+    const activeHotel=activeStay?HOTELS.find(h=>h.id===activeStay.resortId):null;
+    return`<div class="day-card"><div class="day-card-header">
+      <span class="day-label">${d.label}</span>
+      <input type="date" value="${d.date}" onchange="updDay(${d.id},'date',this.value)" style="width:140px;"/>
+      <select onchange="updDay(${d.id},'park',this.value)">${parkOpts(d.park,false)}</select>
+      <span style="font-size:12px;color:#666;">hop→</span>
+      <select onchange="updDay(${d.id},'hop',this.value)">${parkOpts(d.hop,true)}</select>
+      <input type="text" placeholder="Notes..." value="${d.note}" style="flex:1;min-width:80px;" onchange="updDay(${d.id},'note',this.value)"/>
+      <button class="smbtn" onclick="goToSchedule(${d.id})" style="color:#0c447c;border-color:#85b7eb;">Schedule →</button>
+      <button class="smbtn" onclick="removeDay(${d.id})">✕</button>
+    </div>
+    ${park?`<div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <span style="font-size:16px;">${park.icon}</span>
+      <span style="font-size:13px;font-weight:500;">${park.name}</span>
+      <span style="font-size:12px;color:#666;">${park.open}–${park.close}</span>
+      ${hop?`<span style="font-size:12px;color:#666;">→ hop to ${hop.name}</span>`:''}
+      ${transitBadge(d.park,d.date)}
+      ${activeHotel?`<span class="badge" style="background:#FFF8E6;color:#7A5100;">🏨 ${activeHotel.short}</span>`:''}
+      ${ci?`<span class="badge" style="background:${ci.bg};color:${ci.text};">Crowd: ${ci.label} (${crowd}/10)</span>`:'<span style="font-size:12px;color:#999;">Add a date for crowd estimate</span>'}
+      ${d.plan&&d.plan.length?`<span class="badge" style="background:#E6F1FB;color:#0c447c;">📋 ${d.plan.length} planned</span>`:''}
+    </div>`:''}
+    </div>`;
+  }).join('');
+  el.innerHTML+=`<button class="smbtn" onclick="addDay()" style="margin-top:4px;padding:6px 14px;font-size:13px;">+ Add day</button>`;
+  const hops=days.filter(d=>d.hop).length;
+  const pc={};days.forEach(d=>{if(d.park)pc[d.park]=(pc[d.park]||0)+1;});
+  const best=Object.entries(pc).sort((a,b)=>b[1]-a[1])[0];
+  const bp=best?pById(best[0]):null;
+  el.innerHTML+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-top:1.5rem;">
+    <div class="metric"><div class="metric-label">Total days</div><div class="metric-value">${days.length}</div></div>
+    <div class="metric"><div class="metric-label">Park hops</div><div class="metric-value">${hops}</div></div>
+    <div class="metric"><div class="metric-label">Most days at</div><div class="metric-value" style="font-size:14px;padding-top:4px;">${bp?bp.name.split(' ')[0]:'—'}</div></div>
+  </div>`;
+}
+function updDay(id,k,v){const d=days.find(x=>x.id===id);if(d)d[k]=v;saveState();renderItinerary();}
+function removeDay(id){days=days.filter(d=>d.id!==id);saveState();renderItinerary();}
+ 
+// ── Plan modal ──────────────────────────────────────────────────────────────
+function showAddToPlanModal(label,icon,type,llBadge,suggestedTime,tip){
+  _planPending={label,icon,type,llBadge,tip:tip||''};
+  document.getElementById('plan-modal-title').innerHTML=(icon?icon+' ':'')+`<strong>${label}</strong>`;
+  const sel=document.getElementById('plan-modal-day');
+  sel.innerHTML=days.map(d=>{const p=pById(d.park);const ds=d.date?` — ${new Date(d.date+'T12:00:00').toLocaleDateString('default',{month:'short',day:'numeric'})}`:'';return`<option value="${d.id}">${d.label}${ds}${p?' ('+p.short+')':''}`;}).join('');
+  // pre-fill time from suggestedTime string like '10:30 AM'
+  let tv='09:00';
+  if(suggestedTime&&suggestedTime!=='Multiple times daily — check app'&&suggestedTime!=='After dark — check app'&&suggestedTime!=='After dark, every ~10 min until close'&&suggestedTime!=='At park open'){
+    const m=suggestedTime.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if(m){let h=parseInt(m[1]);const min=m[2];const ap=m[3].toUpperCase();if(ap==='PM'&&h!==12)h+=12;if(ap==='AM'&&h===12)h=0;tv=`${String(h).padStart(2,'0')}:${min}`;}
+  }
+  document.getElementById('plan-modal-time').value=tv;
+  document.getElementById('plan-modal-note').value='';
+  const ov=document.getElementById('plan-modal-overlay');ov.style.display='flex';
+}
+function _planModalBgClick(e){if(e.target.id==='plan-modal-overlay')closeAddToPlanModal();}
+function closeAddToPlanModal(){document.getElementById('plan-modal-overlay').style.display='none';_planPending=null;}
+function submitAddToPlan(){
+  if(!_planPending)return;
+  const dayId=parseInt(document.getElementById('plan-modal-day').value);
+  const timeVal=document.getElementById('plan-modal-time').value;
+  const noteVal=document.getElementById('plan-modal-note').value.trim();
+  const day=days.find(d=>d.id===dayId);
+  if(!day)return;
+  if(!day.plan)day.plan=[];
+  // format time for display
+  const[hh,mm]=timeVal.split(':');const h=parseInt(hh);const ampm=h>=12?'PM':'AM';const h12=h%12||12;
+  const displayTime=`${h12}:${mm} ${ampm}`;
+  day.plan.push({id:Date.now(),time:timeVal,displayTime,label:_planPending.label,icon:_planPending.icon||'',type:_planPending.type||'',llBadge:_planPending.llBadge||'',note:noteVal});
+  day.plan.sort((a,b)=>a.time.localeCompare(b.time));
+  saveState();
+  closeAddToPlanModal();
+  renderCurrentTab();
+  // flash confirmation
+  const dayName=day.label;
+  const flash=document.createElement('div');
+  flash.textContent=`✓ Added to ${dayName} at ${displayTime}`;
+  flash.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#27500A;color:#fff;padding:10px 18px;border-radius:20px;font-size:13px;font-weight:500;z-index:9998;pointer-events:none;';
+  document.body.appendChild(flash);
+  setTimeout(()=>flash.remove(),2500);
+}
+function removePlanItem(dayId,itemId){
+  const day=days.find(d=>d.id===dayId);
+  if(!day||!day.plan)return;
+  day.plan=day.plan.filter(item=>item.id!==itemId);
+  saveState();
+  renderCurrentTab();
+}
+function addDay(){days.push({id:nextId++,label:`Day ${days.length+1}`,park:'mk',hop:'',note:'',date:'',plan:[]});saveState();renderItinerary();}
+ 
+function renderParks(){
+  const el=document.getElementById('tab-parks');
+  el.innerHTML=`<h2>Parks & top rides</h2>`+THEME_PARKS.map(park=>{
+    const ci=crowdInfo(park.baseCrowd);
+    const spCount=park.rides.filter(r=>r.llType==='SP').length;
+    const t1Count=park.rides.filter(r=>r.llType==='MLL'&&r.mllTier===1).length;
+    const t2Count=park.rides.filter(r=>r.llType==='MLL'&&(r.mllTier===2||r.mllTier===0)).length;
+    const tr=TRANSIT[park.id];
+    return`<div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="width:36px;height:36px;border-radius:50%;background:#f5f4f0;display:flex;align-items:center;justify-content:center;font-size:18px;">${park.icon}</div>
+        <div><div style="font-weight:500;">${park.name}</div><div style="font-size:12px;color:#666;">${park.open}–${park.close}</div></div>
+        <div style="margin-left:auto;text-align:right;"><div style="font-size:11px;color:#666;">typical crowd</div><div style="font-weight:500;color:${ci.fill};">${park.baseCrowd}/10</div></div>
+      </div>
+      <div class="crowd-bar"><div class="crowd-fill" style="width:${park.baseCrowd*10}%;background:${ci.fill};"></div></div>
+      <div style="font-size:12px;color:#666;margin:8px 0;">${park.notes}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+        <span class="badge badge-amber">SP: ${spCount} rides</span>
+        ${t1Count?`<span class="badge badge-purple">MLL T1: ${t1Count}</span>`:''}
+        ${t2Count?`<span class="badge" style="background:#E1F5EE;color:#085041;">MLL T2: ${t2Count}</span>`:''}
+        ${tr?`<span class="badge" style="background:${tr.mode==='skyliner'?'#E1F5EE':'#F1EFE8'};color:${tr.mode==='skyliner'?'#085041':'#444441'};">${tr.mode==='skyliner'?'🚡':'🚌'} ${tr.time}</span>`:''}
+      </div>
+      ${park.rides.map(r=>`<div class="ride-row">
+        <span style="font-size:13px;flex:1;">${r.name}</span>
+        <div style="display:flex;gap:6px;align-items:center;">
+          ${r.llType==='SP'?'<span class="badge badge-amber">Single Pass</span>':r.mllTier===1?'<span class="badge badge-purple">MLL Tier 1</span>':r.mllTier===2?'<span class="badge" style="background:#E1F5EE;color:#085041;">MLL Tier 2</span>':'<span class="badge badge-gray">MLL</span>'}
+          ${r.wait?`<span style="font-size:12px;color:#666;">~${r.wait}m</span>`:''}
+          <button class="smbtn" onclick="showAddToPlanModal('${r.name.replace(/'/g,"\\x27")}','\uD83C\uDFA2','ride','${r.llType||''}','09:00','')" style="font-size:11px;color:#0c447c;border-color:#85b7eb;">+ Plan</button>
+        </div>
+      </div>`).join('')}
+    </div>`;
+  }).join('');
+}
+ 
+function getLLCounts(parkId){
+  const park=pById(parkId);
+  let t1=0,t2=0,sp=0,spPicked=0;
+  park.rides.forEach(r=>{
+    if(r.llType==='SP'&&r.ll==='sp')spPicked++;
+    if(r.llType==='MLL'&&r.ll==='mll'){
+      if(r.mllTier===1)t1++;
+      else t2++;
+    }
+  });
+  const allSP=[];THEME_PARKS.forEach(p=>p.rides.forEach(r=>{if(r.ll==='sp')allSP.push(r);}));
+  return{t1,t2,totalMLL:t1+t2,spThisPark:spPicked,spAllParks:allSP.length,hasTiers:park.id!=='ak'};
+}
+function canSelectMLL(parkId,mllTier,currentCounts){
+  const{t1,t2,totalMLL,hasTiers}=currentCounts;
+  if(totalMLL>=3)return{ok:false,reason:'Already have 3 MLL pre-selections (max per day)'};
+  if(!hasTiers)return{ok:totalMLL<3,reason:totalMLL>=3?'Max 3 MLL selections':'ok'};
+  if(mllTier===1&&t1>=1)return{ok:false,reason:'Already have 1 Tier 1 MLL (max 1 Tier 1 pre-selection)'};
+  if(mllTier===2&&t1===0&&t2>=3)return{ok:false,reason:'Max 3 MLL pre-selections reached'};
+  if(mllTier===2&&t1>0&&t2>=2)return{ok:false,reason:'Already have 2 Tier 2 picks (max 2 when also picking Tier 1)'};
+  return{ok:true,reason:''};
+}
+function renderLL(){
+  const el=document.getElementById('tab-ll');
+  const park=pById(llPark);
+  const counts=getLLCounts(llPark);
+  const hasTiers=park.id!=='ak';
+  el.innerHTML=`<h2>Lightning Lane planner</h2>
+  <div style="background:#e6f1fb;border:0.5px solid #85b7eb;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#0c447c;">
+    <strong>Pre-booking rules:</strong> At MK, EPCOT, and HS — choose up to 1 Tier 1 + 2 Tier 2, or all 3 from Tier 2. Animal Kingdom has no tiers — pick any 3. Single Pass is separate (max 2/day total across all parks). After you redeem your first LL in the park, tier rules no longer apply.
+  </div>
+  <div class="park-tabs">${THEME_PARKS.map(p=>`<button class="park-tab${p.id===llPark?' active':''}" onclick="switchLLPark('${p.id}')">${p.icon} ${p.short}</button>`).join('')}</div>
+  <div id="ll-rides"></div>
+  <div class="card" style="margin-top:1rem;"><h3>Your full LL plan</h3><div id="ll-sum"></div></div>`;
+  renderLLRides();
+}
+function switchLLPark(id){llPark=id;renderLL();}
+function renderLLRides(){
+  const park=pById(llPark);const el=document.getElementById('ll-rides');if(!el)return;
+  const hasTiers=park.id!=='ak';
+  const counts=getLLCounts(llPark);
+  const spAllTotal=THEME_PARKS.reduce((s,p)=>s+p.rides.filter(r=>r.ll==='sp').length,0);
+ 
+  const tierGroups=hasTiers?[
+    {label:'Single Pass (SP) — separate purchase, max 2/day across all parks',rides:park.rides.filter(r=>r.llType==='SP'),type:'SP'},
+    {label:'Multi Pass Tier 1 — pick max 1 in advance',rides:park.rides.filter(r=>r.llType==='MLL'&&r.mllTier===1),type:'T1'},
+    {label:'Multi Pass Tier 2 — pick up to 2 in advance (or all 3 if no Tier 1)',rides:park.rides.filter(r=>r.llType==='MLL'&&r.mllTier===2),type:'T2'},
+  ]:[
+    {label:'Single Pass (SP) — separate purchase, max 2/day',rides:park.rides.filter(r=>r.llType==='SP'),type:'SP'},
+    {label:'Multi Pass — no tiers, pick any 3',rides:park.rides.filter(r=>r.llType==='MLL'),type:'T0'},
+  ];
+ 
+  el.innerHTML=tierGroups.map(grp=>{
+    if(!grp.rides.length)return'';
+    return`<div class="card" style="margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:500;color:#444;margin-bottom:8px;padding-bottom:6px;border-bottom:0.5px solid #eee;">${grp.label}</div>
+      ${grp.rides.map(r=>{
+        const idx=park.rides.indexOf(r);
+        const isSP=r.llType==='SP';
+        const selMLL=r.ll==='mll', selSP=r.ll==='sp', selNo=r.ll==='no';
+        const freshCounts=getLLCounts(llPark);
+        const canMLL=isSP?{ok:false}:canSelectMLL(llPark,r.mllTier,{...freshCounts,t1:selMLL&&r.mllTier===1?freshCounts.t1-1:freshCounts.t1,t2:selMLL&&r.mllTier===2?freshCounts.t2-1:freshCounts.t2,totalMLL:selMLL?freshCounts.totalMLL-1:freshCounts.totalMLL,hasTiers:park.id!=='ak'});
+        const canSP=isSP&&(selSP||spAllTotal<2);
+        const mllDisabled=!selMLL&&!canMLL.ok;
+        const spDisabled=!selSP&&!canSP;
+        const tierTag=isSP?'<span class="badge badge-amber" style="font-size:10px;">Single Pass</span>':
+          r.mllTier===1?'<span class="badge badge-purple" style="font-size:10px;">Tier 1</span>':
+          r.mllTier===2?'<span class="badge" style="font-size:10px;background:#E1F5EE;color:#085041;">Tier 2</span>':
+          '<span class="badge badge-gray" style="font-size:10px;">No Tiers</span>';
+        return`<div class="ride-row">
+          <div style="flex:1;">
+            <span style="font-size:13px;">${r.name}</span>
+            <span style="margin-left:6px;">${tierTag}</span>
+            ${!selMLL&&mllDisabled&&!isSP?`<div style="font-size:11px;color:#999;margin-top:2px;">${canMLL.reason}</div>`:''}
+            ${!selSP&&spDisabled&&isSP?`<div style="font-size:11px;color:#999;margin-top:2px;">Max 2 Single Pass per day reached</div>`:''}
+          </div>
+          <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-left:8px;">
+            ${r.wait?`<span style="font-size:11px;color:#999;">~${r.wait}m</span>`:''}
+            ${isSP?`<button class="ll-btn${selSP?' sel-ias':''}" onclick="setLL('${park.id}',${idx},'sp')" ${spDisabled&&!selSP?'style="opacity:0.4;cursor:not-allowed;"':''}>Buy SP</button>`
+              :`<button class="ll-btn${selMLL?' sel-mll':''}" onclick="setLL('${park.id}',${idx},'mll')" ${mllDisabled&&!selMLL?'style="opacity:0.4;cursor:not-allowed;"':''}>Pre-book MLL</button>`}
+            <button class="ll-btn${selNo?' sel-no':''}" onclick="setLL('${park.id}',${idx},'no')">Standby</button>
+            <button class="smbtn" onclick="showAddToPlanModal('${r.name.replace(/'/g,"\\x27")}','\uD83C\uDFA2','ride','${isSP?'SP':'MLL'}','09:00','')" style="font-size:11px;color:#0c447c;border-color:#85b7eb;">+ Plan</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+  renderLLSummary();
+}
+function setLL(pid,idx,val){
+  const park=pById(pid);const ride=park.rides[idx];
+  if(ride.ll===val){ride.ll=null;}
+  else{
+    if(val==='mll'&&ride.llType!=='SP'){
+      const counts=getLLCounts(pid);
+      const check=canSelectMLL(pid,ride.mllTier,counts);
+      if(!check.ok){alert('Cannot add: '+check.reason);return;}
+    }
+    if(val==='sp'){
+      const spTotal=THEME_PARKS.reduce((s,p)=>s+p.rides.filter(r=>r.ll==='sp').length,0);
+      if(spTotal>=2&&ride.ll!=='sp'){alert('Cannot add: Max 2 Single Pass purchases per day across all parks.');return;}
+    }
+    ride.ll=val;
+  }
+  saveState();
+  renderLLRides();
+}
+function renderLLSummary(){
+  const el2=document.getElementById('ll-sum');if(!el2)return;
+  const allParksData=THEME_PARKS.map(p=>{
+    const c=getLLCounts(p.id);
+    const sp=p.rides.filter(r=>r.ll==='sp');
+    const mll=p.rides.filter(r=>r.ll==='mll');
+    return{park:p,c,sp,mll};
+  }).filter(x=>x.sp.length||x.mll.length);
+  const spTotal=THEME_PARKS.reduce((s,p)=>s+p.rides.filter(r=>r.ll==='sp').length,0);
+  const mllTotal=THEME_PARKS.reduce((s,p)=>s+p.rides.filter(r=>r.ll==='mll').length,0);
+  const undecided=THEME_PARKS.reduce((s,p)=>s+p.rides.filter(r=>!r.ll&&r.llType==='MLL').length,0);
+  el2.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:10px;margin-bottom:12px;">
+    <div class="metric"><div class="metric-label">MLL pre-booked</div><div class="metric-value">${mllTotal}</div></div>
+    <div class="metric"><div class="metric-label">Single Pass</div><div class="metric-value">${spTotal}/2</div></div>
+    <div class="metric"><div class="metric-label">Undecided</div><div class="metric-value">${undecided}</div></div>
+  </div>
+  ${allParksData.map(x=>`<div style="margin-bottom:10px;">
+    <div style="font-size:12px;font-weight:500;margin-bottom:4px;">${x.park.icon} ${x.park.name}</div>
+    ${x.sp.map(r=>`<div style="font-size:12px;padding:3px 0;display:flex;gap:6px;align-items:center;"><span class="badge badge-amber" style="font-size:10px;">SP</span> ${r.name}</div>`).join('')}
+    ${x.mll.map(r=>`<div style="font-size:12px;padding:3px 0;display:flex;gap:6px;align-items:center;"><span class="badge ${r.mllTier===1?'badge-purple':'badge-green'}" style="font-size:10px;">T${r.mllTier===0?'—':r.mllTier} MLL</span> ${r.name}</div>`).join('')}
+    ${(()=>{const c=x.c;const hasTiers=x.park.id!=='ak';const issues=[];
+      if(hasTiers&&c.t1>1)issues.push('Too many Tier 1 picks (max 1)');
+      if(hasTiers&&c.t1>0&&c.t2>2)issues.push('Too many Tier 2 picks (max 2 when Tier 1 selected)');
+      if(c.totalMLL>3)issues.push('Too many MLL picks (max 3 pre-booked)');
+      return issues.map(i=>`<div style="font-size:11px;color:#A32D2D;margin-top:2px;">⚠ ${i}</div>`).join('');
+    })()}
+  </div>`).join('')}
+  ${spTotal>2?'<div style="font-size:12px;color:#A32D2D;margin-top:4px;">⚠ Over the 2 Single Pass limit across all parks</div>':''}
+  <div style="font-size:12px;color:#666;margin-top:8px;padding-top:8px;border-top:0.5px solid #eee;">After redeeming your first LL in the park, tier limits no longer apply — book freely from any tier.</div>`;
+}
+ 
+function renderCrowd(){
+  const now=new Date();
+  if(calMonth==null){calMonth=now.getMonth();calYear=now.getFullYear();}
+  const el=document.getElementById('tab-crowd');
+  const todayCrowds=THEME_PARKS.map(p=>({...p,todayLevel:getCrowd(p.id,'',now.getDay())}));
+  const mName=new Date(calYear,calMonth,1).toLocaleString('default',{month:'long'});
+  const firstDow=new Date(calYear,calMonth,1).getDay();
+  const dim=new Date(calYear,calMonth+1,0).getDate();
+  const cells=[];for(let i=0;i<firstDow;i++)cells.push(null);for(let d=1;d<=dim;d++)cells.push(d);
+  el.innerHTML=`<h2>Crowd calendar</h2>
+  <div style="font-size:13px;color:#666;margin-bottom:8px;">Today — ${now.toLocaleDateString('default',{weekday:'long',month:'long',day:'numeric'})}</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1.5rem;">
+    ${todayCrowds.map(p=>{const ci=crowdInfo(p.todayLevel);return`<div style="background:#fff;border:0.5px solid #ddd;border-radius:12px;padding:10px 12px;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+        <span style="font-size:16px;">${p.icon}</span><span style="font-weight:500;font-size:13px;">${p.short}</span>
+        <span class="badge" style="margin-left:auto;background:${ci.bg};color:${ci.text};">${ci.label}</span>
+      </div>
+      <div class="crowd-bar"><div class="crowd-fill" style="width:${p.todayLevel*10}%;background:${ci.fill};"></div></div>
+    </div>`;}).join('')}
+  </div>
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <button class="smbtn" onclick="calNav(-1)">← Prev</button>
+      <span style="font-weight:500;">${mName} ${calYear}</span>
+      <button class="smbtn" onclick="calNav(1)">Next →</button>
+    </div>
+    <div class="park-tabs">${THEME_PARKS.map(p=>`<button class="park-tab${p.id===calParkId?' active':''}" onclick="calPark('${p.id}')">${p.icon} ${p.short}</button>`).join('')}</div>
+    <div class="cal-grid">
+      ${['Su','Mo','Tu','We','Th','Fr','Sa'].map(d=>`<div class="cal-hdr">${d}</div>`).join('')}
+      ${cells.map(d=>{
+        if(!d)return`<div class="cal-day" style="cursor:default;"></div>`;
+        const ds=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const lvl=getCrowd(calParkId,ds);const ci=crowdInfo(lvl);
+        const isSel=calSelDay===d;
+        const isToday=d===now.getDate()&&calMonth===now.getMonth()&&calYear===now.getFullYear();
+        const hasTripDay=days.some(dy=>dy.date===ds);
+        return`<div class="cal-day${isSel?' selected':''}${isToday?' today-marker':''}" onclick="calSel(${d})">
+          <div class="cn" style="${isToday?'color:#0c447c;':''}">${d}${hasTripDay?'<span style="color:#1D9E75;font-size:10px;"> ●</span>':''}</div>
+          <div class="cl" style="background:${ci.bg};color:${ci.text};">${lvl}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center;">
+      <span style="font-size:12px;color:#085041;background:#E1F5EE;padding:2px 8px;border-radius:20px;">1–4 Low</span>
+      <span style="font-size:12px;color:#27500A;background:#EAF3DE;padding:2px 8px;border-radius:20px;">5–6 Moderate</span>
+      <span style="font-size:12px;color:#633806;background:#FAEEDA;padding:2px 8px;border-radius:20px;">7–8 High</span>
+      <span style="font-size:12px;color:#791F1F;background:#FCEBEB;padding:2px 8px;border-radius:20px;">9–10 Very High</span>
+      <span style="font-size:12px;color:#666;">● = your trip day</span>
+    </div>
+  </div>
+  ${calSelDay?`<div class="card"><h3>All parks on day ${calSelDay} of ${mName}</h3>
+    ${THEME_PARKS.map(p=>{const ds2=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(calSelDay).padStart(2,'0')}`;const lvl=getCrowd(p.id,ds2);const ci=crowdInfo(lvl);
+      return`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid #eee;">
+        <span style="font-size:16px;">${p.icon}</span>
+        <span style="font-size:13px;font-weight:500;min-width:130px;">${p.name}</span>
+        <div style="flex:1;"><div class="crowd-bar"><div class="crowd-fill" style="width:${lvl*10}%;background:${ci.fill};"></div></div></div>
+        <span class="badge" style="background:${ci.bg};color:${ci.text};">${ci.label} (${lvl})</span>
+      </div>`;}).join('')}
+  </div>`:'<div style="font-size:13px;color:#999;margin-top:4px;">Click a date to compare all parks.</div>'}`;
+}
+function calNav(d){calMonth+=d;if(calMonth>11){calMonth=0;calYear++;}if(calMonth<0){calMonth=11;calYear--;}renderCrowd();}
+function calPark(id){calParkId=id;renderCrowd();}
+function calSel(d){calSelDay=calSelDay===d?null:d;renderCrowd();}
+ 
+function renderSchedule(){
+  const el=document.getElementById('tab-schedule');
+  let activeDayId=schedDay;
+  if(!activeDayId&&days.length)activeDayId=days[0].id;
+  const activeDay=days.find(d=>d.id===activeDayId)||days[0];
+  const park=activeDay?pById(activeDay.park):PARKS[0];
+  const crowd=activeDay&&activeDay.date?getCrowd(park.id,activeDay.date):null;
+  const ci=crowd!=null?crowdInfo(crowd):null;
+  const tr=park?getTransitInfo(park.id,activeDay&&activeDay.date?activeDay.date:null):null;
+  const activeStay=activeDay&&activeDay.date?getHotelForDate(activeDay.date):null;
+  const activeHotelData=activeStay?HOTELS.find(h=>h.id===activeStay.resortId):null;
+  el.innerHTML=`<h2>Daily Schedule</h2>
+  <div class="tip-box">Linked to your itinerary — transit times update based on your hotel.</div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem;">
+    ${days.map(d=>{const p=pById(d.park);return`<button class="park-tab${d.id===activeDayId?' active':''}" onclick="switchSchedDay(${d.id})">${p?p.icon:''} ${d.label}${d.date?' ('+new Date(d.date+'T12:00:00').toLocaleDateString('default',{month:'short',day:'numeric'})+')':''}</button>`;}).join('')}
+  </div>
+  ${park?`<div class="card">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+      <span style="font-size:24px;">${park.icon}</span>
+      <div>
+        <div style="font-weight:500;font-size:15px;">${park.name}</div>
+        <div style="font-size:12px;color:#666;">${park.open}–${park.close} · ${park.notes}</div>
+      </div>
+      ${activeDay&&activeDay.date?`<div style="margin-left:auto;">
+        <div style="font-size:12px;color:#666;">${new Date(activeDay.date+'T12:00:00').toLocaleDateString('default',{weekday:'long',month:'long',day:'numeric'})}</div>
+        ${ci?`<span class="badge" style="margin-top:4px;background:${ci.bg};color:${ci.text};">Crowd: ${ci.label} (${crowd}/10)</span>`:''}
+      </div>`:''}
+    </div>
+    ${tr?`<div style="background:${transitColors(tr.mode).bg};border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:13px;color:${transitColors(tr.mode).col};">
+      <strong>${transitIcon(tr.mode)} from ${tr.hotelName||'your resort'}</strong>${activeHotelData?` ${activeHotelData.icon}`:''} — ${tr.time} · ${tr.freq}<br/>
+      <span style="font-size:12px;opacity:0.85;">${tr.tip}</span>
+    </div>`:''}
+    ${(()=>{const plan=(activeDay&&activeDay.plan)||[];if(!plan.length)return'';return`<div style="margin-bottom:14px;padding-bottom:14px;border-bottom:0.5px solid #ddd;"><div style="font-size:12px;font-weight:600;color:#0c447c;margin-bottom:8px;letter-spacing:0.03em;">📅 MY PLAN</div>${plan.map(item=>{const llB=item.llBadge?`<span class="badge ${item.llBadge==='MLL'?'badge-purple':item.llBadge==='SP'?'badge-amber':'badge-gray'}" style="font-size:10px;">⚡ ${item.llBadge}</span>`:'';return`<div class="plan-item"><span class="plan-item-time">${item.displayTime||item.time}</span><div class="plan-item-dot"></div><div class="plan-item-body"><div>${item.icon?item.icon+' ':''}<strong>${item.label}</strong> ${llB}</div>${item.note?`<div class="plan-item-note">${item.note}</div>`:''}</div><button class="smbtn" onclick="removePlanItem(${activeDay.id},${item.id})" style="color:#A32D2D;border-color:#E24B4A;font-size:11px;padding:2px 6px;">✕</button></div>`;}).join('')}</div>`;})()}
+    <div style="font-size:11px;font-weight:600;color:#888;letter-spacing:0.04em;margin-bottom:8px;">PARK GUIDE</div>
+    ${park.schedule.map(s=>{
+      const isSky=s.tag==='skyliner',isBus=s.tag==='bus';
+      const tagHtml=s.tag==='IAS'?'<span class="badge badge-amber" style="font-size:11px;">IAS LL</span>':
+        s.tag==='MLL'?'<span class="badge badge-purple" style="font-size:11px;">MLL</span>':
+        s.tag==='must'?'<span class="badge badge-blue" style="font-size:11px;">must-do</span>':
+        s.tag==='note'?'<span class="badge badge-red" style="font-size:11px;">note</span>':
+        isSky?'<span class="badge" style="background:#E1F5EE;color:#085041;font-size:11px;">🚡 Skyliner</span>':
+        isBus?'<span class="badge badge-gray" style="font-size:11px;">🚌 Bus</span>':'';
+      return`<div class="sched-item">
+        <span class="sched-time">${s.time}</span>
+        <div class="sched-dot" style="background:${s.dot};"></div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:500;">${s.title} ${tagHtml}</div>
+          <div class="sched-sub">${s.sub}</div>
+        </div>
+      </div>`;
+    }).join('')}
+    ${(()=>{const ps=SHOWS[park?park.id:'']||[];if(!ps.length)return'';return`<div style="margin-top:12px;padding-top:12px;border-top:0.5px solid #eee;"><div style="font-size:12px;font-weight:500;color:#444;margin-bottom:8px;">\ud83c\udfad Shows at ${park.name}</div>${ps.map(s=>{const llB=s.llType?`<span class="badge ${s.llType==='MLL'?'badge-purple':'badge-amber'}" style="font-size:10px;">\u26a1 ${s.llType}</span>`:'';return`<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:0.5px solid #f5f5f5;"><span style="font-size:15px;">${s.icon}</span><div style="flex:1;"><div style="font-size:12px;font-weight:500;">${s.name} ${llB}</div><div style="display:flex;gap:4px;flex-wrap:wrap;margin:3px 0;">${s.times.map(t=>`<span style="font-size:10px;background:#F1EFE8;color:#444;padding:1px 6px;border-radius:20px;">${t}</span>`).join('')}</div></div></div>`;}).join('')}</div>`;})()}
+    ${activeDay&&activeDay.hop?`<div style="margin-top:12px;padding-top:12px;border-top:0.5px solid #eee;">
+      <div style="font-size:13px;font-weight:500;margin-bottom:4px;">After 2:00 PM — Park hop to ${pById(activeDay.hop)?pById(activeDay.hop).name:''} ${pById(activeDay.hop)?pById(activeDay.hop).icon:''}</div>
+      <div style="font-size:12px;color:#666;">Head to your second park after 2:00 PM. Check evening showtimes at your hop destination.</div>
+    </div>`:''}
+  </div>`:'<div class="tip-box">Add a day to your itinerary to see a schedule here.</div>'}`;
+}
+function switchSchedDay(id){schedDay=id;renderSchedule();}
+ 
+function renderOptimizer(){
+  const el=document.getElementById('tab-optimizer');
+  el.innerHTML=`<h2>Crowd optimizer</h2>
+  <div class="tip-box">Enter your trip start date — the optimizer finds the lowest-crowd park order for your dates.</div>
+  <div class="card">
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:1rem;">
+      <div><div style="font-size:12px;color:#666;margin-bottom:4px;">Trip start date</div>
+        <input type="date" id="opt-start" value="${optStartDate}" onchange="optStartDate=this.value;saveState();renderOptimizerResults();" />
+      </div>
+      <div><div style="font-size:12px;color:#666;margin-bottom:4px;">Number of days</div>
+        <select id="opt-days" onchange="renderOptimizerResults();">
+          ${[2,3,4,5,6,7].map(n=>`<option value="${n}"${days.length===n?' selected':''}>${n} days</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div id="opt-results"><div style="font-size:13px;color:#999;">Select a start date above to generate recommendations.</div></div>
+  </div>`;
+}
+function renderOptimizerResults(){
+  const el=document.getElementById('opt-results');if(!el)return;
+  const numDays=parseInt(document.getElementById('opt-days').value)||4;
+  const startDate=optStartDate;
+  if(!startDate){el.innerHTML=`<div style="font-size:13px;color:#999;">Select a start date above.</div>`;return;}
+  const start=new Date(startDate+'T12:00:00');if(isNaN(start)){el.innerHTML=`<div style="font-size:13px;color:#999;">Enter a valid date.</div>`;return;}
+  const tripDays=[];
+  for(let i=0;i<numDays;i++){
+    const d=new Date(start);d.setDate(start.getDate()+i);
+    const dow=d.getDay();
+    const dateStr=d.toISOString().split('T')[0];
+    const dayName=d.toLocaleDateString('default',{weekday:'short',month:'short',day:'numeric'});
+    const parkScores=THEME_PARKS.map(p=>({id:p.id,crowd:getCrowd(p.id,dateStr,dow)}));
+    tripDays.push({i,dateStr,dayName,dow,parkScores});
+  }
+  function permute(arr){if(arr.length<=1)return[arr];const r=[];for(let i=0;i<arr.length;i++){permute([...arr.slice(0,i),...arr.slice(i+1)]).forEach(p=>r.push([arr[i],...p]));}return r;}
+  const parkIds=THEME_PARKS.map(p=>p.id);
+  let bestScore=Infinity,bestAssignment=null;
+  if(numDays<=4){
+    permute(parkIds).forEach(perm=>{
+      let score=0;
+      for(let i=0;i<Math.min(numDays,4);i++){
+        const crowd=tripDays[i]?tripDays[i].parkScores.find(ps=>ps.id===perm[i]).crowd:5;
+        score+=crowd;
+        if(perm[i]==='ak'&&i===numDays-1)score+=3;
+        if(perm[i]==='hs'&&tripDays[i]&&(tripDays[i].dow===0||tripDays[i].dow===6))score+=2;
+      }
+      if(score<bestScore){bestScore=score;bestAssignment=perm.slice(0,numDays);}
+    });
+  } else {
+    bestAssignment=[];const pool=[...parkIds];
+    for(let i=0;i<numDays;i++)bestAssignment.push(pool[i%pool.length]);
+  }
+  const rows=bestAssignment.map((pid,i)=>{
+    const park=pById(pid);const td=tripDays[i];
+    const crowd=td.parkScores.find(ps=>ps.id===pid).crowd;const ci=crowdInfo(crowd);
+    const reasons=[];
+    if(crowd<=5)reasons.push('Low crowd day');
+    if(pid==='hs'&&td.dow>=1&&td.dow<=4)reasons.push('Weekday — best for HS');
+    if(pid==='ak')reasons.push('Closes early — go first');
+    if(pid==='mk')reasons.push('Full day needed');
+    const tr=TRANSIT[pid];
+    if(tr)reasons.push(tr.mode==='skyliner'?'🚡 Skyliner direct':'🚌 Bus ~'+tr.time);
+    const alts=td.parkScores.filter(ps=>ps.id!==pid).sort((a,b)=>a.crowd-b.crowd).slice(0,2);
+    return{park,td,crowd,ci,reasons,alts};
+  });
+  const avg=Math.round(rows.reduce((s,r)=>s+r.crowd,0)/rows.length);
+  const worst=rows.reduce((a,b)=>a.crowd>b.crowd?a:b);
+  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-bottom:1rem;">
+    <div class="metric"><div class="metric-label">Avg crowd</div><div class="metric-value">${avg}/10</div></div>
+    <div class="metric"><div class="metric-label">Worst day</div><div class="metric-value" style="font-size:14px;padding-top:4px;">${worst.park.short} Day ${worst.td.i+1}</div></div>
+    <div class="metric"><div class="metric-label">Trip score</div><div class="metric-value" style="color:${avg<=5?'#27500A':avg<=7?'#633806':'#791F1F'}">${avg<=5?'Great':avg<=7?'Good':'Busy'}</div></div>
+  </div>
+  ${rows.map((r,i)=>{const ci=r.ci;return`<div style="display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:0.5px solid #eee;">
+    <div style="width:28px;height:28px;border-radius:50%;background:${ci.bg};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:${ci.text};flex-shrink:0;">${i+1}</div>
+    <div style="flex:1;">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-size:16px;">${r.park.icon}</span>
+        <span style="font-weight:500;font-size:14px;">${r.park.name}</span>
+        <span class="badge" style="background:${ci.bg};color:${ci.text};">${ci.label} (${r.crowd}/10)</span>
+        <span style="font-size:12px;color:#666;">${r.td.dayName}</span>
+      </div>
+      ${r.reasons.length?`<div style="font-size:12px;color:#666;margin-top:4px;">${r.reasons.map(x=>'→ '+x).join(' · ')}</div>`:''}
+      ${r.alts.length?`<div style="font-size:12px;color:#666;margin-top:3px;">Alternatives: ${r.alts.map(p=>{const c=crowdInfo(p.crowd);return`<span class="badge" style="background:${c.bg};color:${c.text};font-size:10px;">${pById(p.id).short} ${p.crowd}</span>`;}).join(' ')}</div>`:''}
+    </div>
+    <button class="smbtn" style="color:#0c447c;border-color:#85b7eb;font-size:12px;" onclick="applyOptDay(${i},'${r.park.id}','${r.td.dateStr}')">Apply →</button>
+  </div>`;}).join('')}
+  <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+    <button class="smbtn" style="color:#27500A;border-color:#639922;font-size:13px;padding:6px 14px;" onclick="applyAll(${JSON.stringify(rows.map(r=>({park:r.park.id,date:r.td.dateStr})))})">Apply all to itinerary</button>
+    <button class="smbtn" style="font-size:13px;padding:6px 14px;" onclick="goToItinerary()">Go to itinerary →</button>
+  </div>`;
+}
+function applyOptDay(idx,parkId,dateStr){
+  if(idx<days.length){days[idx].park=parkId;days[idx].date=dateStr;}
+  else{days.push({id:nextId++,label:`Day ${idx+1}`,park:parkId,hop:'',note:'',date:dateStr});}
+  saveState();
+}
+function applyAll(plan){
+  plan.forEach((item,idx)=>{
+    if(idx<days.length){days[idx].park=item.park;days[idx].date=item.date;}
+    else{days.push({id:nextId++,label:`Day ${idx+1}`,park:item.park,hop:'',note:'',date:item.date});}
+  });
+  saveState();
+  goToItinerary();
+}
+ 
+function renderTips(){
+  document.getElementById('tab-tips').innerHTML=`<h2>Strategy tips</h2>`+
+  TIPS.map(s=>`<div class="card"><h3 style="margin-bottom:10px;">${s.icon} ${s.cat}</h3>
+    ${s.tips.map(t=>`<div style="display:flex;gap:8px;margin-bottom:6px;font-size:13px;"><span style="color:#999;flex-shrink:0;">→</span><span>${t}</span></div>`).join('')}
+  </div>`).join('');
+}
+ 
+function renderShows(){
+  const el=document.getElementById('tab-shows');
+  el.innerHTML=`<h2>Park Shows</h2>
+  <div class="tip-box">🎭 Times shown are typical — always confirm on the day in the My Disney Experience app. ⚡ = Lightning Lane available.</div>`;
+  THEME_PARKS.forEach(park=>{
+    const shows=SHOWS[park.id]||[];
+    el.innerHTML+=`<div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <span style="font-size:22px;">${park.icon}</span>
+        <span style="font-weight:500;font-size:15px;">${park.name}</span>
+      </div>
+      ${shows.map(s=>{
+        const llBadge=s.llType==='MLL'?'<span class="badge badge-purple" style="font-size:10px;">⚡ MLL</span>':
+          s.llType==='SP'?'<span class="badge badge-amber" style="font-size:10px;">⚡ SP</span>':'';
+        return`<div style="padding:10px 0;border-bottom:0.5px solid #f0f0f0;">
+          <div style="display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap;">
+            <span style="font-size:18px;">${s.icon}</span>
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:500;">${s.name} ${llBadge}</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin:5px 0;align-items:center;">
+                ${s.times.map(t=>`<span style="font-size:11px;background:#F1EFE8;color:#444;padding:2px 8px;border-radius:20px;">${t}</span>`).join('')}
+                <button class="smbtn" onclick="showAddToPlanModal('${s.name.replace(/'/g,"\\x27")}','${s.icon}','show','${s.llType||''}','${s.times&&s.times[0]?s.times[0]:'09:00'}','')" style="font-size:11px;color:#0c447c;border-color:#85b7eb;">+ Plan</button>
+              </div>
+              <div style="font-size:12px;color:#666;">${s.tip}</div>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  });
+}
+ 
+function renderWater(){
+  const el=document.getElementById('tab-water');
+  const waterParks=PARKS.filter(p=>p.type==='water');
+  const golfParks=PARKS.filter(p=>p.type==='golf');
+  el.innerHTML=`<h2>Water Parks & Mini Golf</h2>
+  <div class="tip-box">🌡️ Water parks are separate tickets or included with Disney Water Parks Fun Option on your park ticket. Mini golf is a separate walk-up purchase.</div>`;
+  // Water parks
+  waterParks.forEach(park=>{
+    el.innerHTML+=`<div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="width:36px;height:36px;border-radius:50%;background:#f5f4f0;display:flex;align-items:center;justify-content:center;font-size:18px;">${park.icon}</div>
+        <div><div style="font-weight:500;">${park.name}</div><div style="font-size:12px;color:#666;">${park.open}–${park.close} · ${park.notes}</div></div>
+      </div>
+      <div style="font-size:12px;font-weight:500;color:#444;margin-bottom:8px;padding-bottom:6px;border-top:0.5px solid #eee;padding-top:8px;">Attractions & Slides</div>
+      ${park.rides.map(r=>`<div class="ride-row">
+        <span style="font-size:13px;flex:1;">${r.name}</span>
+        ${r.wait?`<span style="font-size:12px;color:#666;">~${r.wait}m avg wait</span>`:''}
+      </div>`).join('')}
+      <div style="font-size:12px;font-weight:500;color:#444;margin:12px 0 8px;padding-top:8px;border-top:0.5px solid #eee;">Suggested Day Plan</div>
+      ${park.schedule.map(s=>`<div class="sched-item">
+        <span class="sched-time">${s.time}</span>
+        <div class="sched-dot" style="background:${s.dot};"></div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:500;">${s.title}</div>
+          <div class="sched-sub">${s.sub}</div>
+        </div>
+      </div>`).join('')}
+    </div>`;
+  });
+  // Mini golf
+  if(golfParks.length){
+    el.innerHTML+=`<h3 style="margin:1.5rem 0 0.5rem;">Mini Golf</h3>`;
+    golfParks.forEach(park=>{
+      el.innerHTML+=`<div class="card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <div style="width:36px;height:36px;border-radius:50%;background:#f5f4f0;display:flex;align-items:center;justify-content:center;font-size:18px;">${park.icon}</div>
+          <div><div style="font-weight:500;">${park.name}</div><div style="font-size:12px;color:#666;">${park.open}–${park.close} · ${park.notes}</div></div>
+        </div>
+        ${park.rides.map(r=>`<div class="ride-row"><span style="font-size:13px;flex:1;">${r.name}</span></div>`).join('')}
+        <div style="font-size:12px;font-weight:500;color:#444;margin:12px 0 8px;padding-top:8px;border-top:0.5px solid #eee;">Tips</div>
+        ${park.schedule.map(s=>`<div class="sched-item">
+          <span class="sched-time">${s.time}</span>
+          <div class="sched-dot" style="background:${s.dot};"></div>
+          <div style="flex:1;"><div style="font-size:13px;font-weight:500;">${s.title}</div><div class="sched-sub">${s.sub}</div></div>
+        </div>`).join('')}
+      </div>`;
+    });
+  }
+}
+
+// ── Hotel tab ───────────────────────────────────────────────────
+const HOTEL_CATS=['Value','Moderate','Deluxe','DVC'];
+
+function hotelOpts(sel){
+  let o='<option value="">-- select resort --</option>';
+  HOTEL_CATS.forEach(cat=>{
+    const group=HOTELS.filter(h=>h.category===cat);
+    if(!group.length)return;
+    o+=`<optgroup label="${cat} Resorts">`;
+    group.forEach(h=>{o+=`<option value="${h.id}"${h.id===sel?' selected':''}>${h.icon} ${h.name}</option>`;});
+    o+='</optgroup>';
+  });
+  return o;
+}
+
+function renderHotel(){
+  const el=document.getElementById('tab-hotel');
+  // Sort stays by check-in
+  const sorted=[...hotels].sort((a,b)=>a.checkIn.localeCompare(b.checkIn));
+  el.innerHTML=`<h2>Hotel & Resort</h2>
+  <div class="tip-box">🏨 Your resort stays appear on the itinerary and schedule. Transit times update automatically.</div>
+  ${sorted.map(stay=>{
+    const hotel=HOTELS.find(h=>h.id===stay.resortId);
+    const ciDate=stay.checkIn?new Date(stay.checkIn+'T12:00:00').toLocaleDateString('default',{month:'short',day:'numeric',year:'numeric'}):'';
+    const coDate=stay.checkOut?new Date(stay.checkOut+'T12:00:00').toLocaleDateString('default',{month:'short',day:'numeric',year:'numeric'}):'';
+    const nights=stay.checkIn&&stay.checkOut?Math.round((new Date(stay.checkOut+'T12:00:00')-new Date(stay.checkIn+'T12:00:00'))/(1000*60*60*24)):null;
+    return`<div class="hotel-card">
+      <div class="hotel-card-header">
+        <span style="font-size:20px;">${hotel?hotel.icon:'🏨'}</span>
+        <div style="flex:1;">
+          <select style="width:100%;margin-bottom:6px;" onchange="updHotel(${stay.id},'resortId',this.value)">${hotelOpts(stay.resortId)}</select>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <label style="font-size:12px;color:#666;">Check-in <input type="date" value="${stay.checkIn}" onchange="updHotel(${stay.id},'checkIn',this.value)" style="margin-left:4px;"/></label>
+            <label style="font-size:12px;color:#666;">Check-out <input type="date" value="${stay.checkOut}" onchange="updHotel(${stay.id},'checkOut',this.value)" style="margin-left:4px;"/></label>
+            ${nights!=null&&nights>0?`<span class="badge badge-gray">${nights} night${nights!==1?'s':''}</span>`:''}
+          </div>
+        </div>
+        <button class="smbtn" style="color:#791F1F;border-color:#E24B4A;" onclick="removeHotel(${stay.id})">✕</button>
+      </div>
+      ${hotel?`<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <span class="badge" style="background:#FFF8E6;color:#7A5100;">${hotel.category}</span>
+        ${['mk','ep','hs','ak'].map(pid=>{
+          const park=pById(pid);
+          const t=hotel.transit[pid];
+          if(!t)return'';
+          const c=transitColors(t.mode);
+          return`<span class="badge" style="background:${c.bg};color:${c.col};">${park.icon} ${transitIcon(t.mode)} ${t.time}</span>`;
+        }).join('')}
+      </div>`:''}
+      ${ciDate&&coDate?`<div style="font-size:12px;color:#666;margin-top:6px;">${ciDate} → ${coDate}</div>`:''}
+    </div>`;
+  }).join('')}
+  <button class="smbtn" onclick="addHotel()" style="padding:6px 14px;font-size:13px;margin-top:4px;">+ Add resort stay</button>`;
+  updateTitleSubtitle();
+}
+
+function addHotel(){
+  hotels.push({id:hotelNextId++,resortId:'',checkIn:'',checkOut:''});
+  saveState();
+  renderHotel();
+}
+function removeHotel(id){
+  hotels=hotels.filter(h=>h.id!==id);
+  saveState();
+  renderHotel();
+}
+function updHotel(id,k,v){
+  const h=hotels.find(x=>x.id===id);
+  if(h)h[k]=v;
+  saveState();
+  renderHotel();
+}
+
+function updateTitleSubtitle(){
+  const el=document.getElementById('app-title');
+  if(!el)return;
+  if(!hotels.length){el.textContent='✨ Disney Trip Planner';return;}
+  const named=hotels.filter(h=>h.resortId);
+  if(!named.length){el.textContent='✨ Disney Trip Planner';return;}
+  const names=named.map(h=>{const hd=HOTELS.find(x=>x.id===h.resortId);return hd?hd.short:null;}).filter(Boolean);
+  el.textContent=`✨ Disney Trip Planner — ${names.join(' → ')}`;
+}
+
+// ── Trips storage helpers ──────────────────────────────────────────
+const TRIPS_KEY='disneyPlanner_trips';
+const ACTIVE_KEY='disneyPlanner_active';
+
+function currentSnapshot(){
+  const llSelections={};
+  THEME_PARKS.forEach(p=>{llSelections[p.id]=p.rides.map(r=>r.ll);});
+  return{days:JSON.parse(JSON.stringify(days)),nextId,llSelections,optStartDate,hotels:JSON.parse(JSON.stringify(hotels)),hotelNextId};
+}
+
+function applySnapshot(saved){
+  if(Array.isArray(saved.days))days=JSON.parse(JSON.stringify(saved.days));
+  if(saved.nextId)nextId=saved.nextId;
+  if(saved.optStartDate!=null)optStartDate=saved.optStartDate;
+  if(Array.isArray(saved.hotels))hotels=JSON.parse(JSON.stringify(saved.hotels));
+  if(saved.hotelNextId)hotelNextId=saved.hotelNextId;
+  if(saved.llSelections){
+    THEME_PARKS.forEach(p=>{
+      const sels=saved.llSelections[p.id];
+      if(sels)p.rides.forEach((r,i)=>{r.ll=sels[i]!==undefined?sels[i]:null;});
+    });
+  }
+}
+
+function getTrips(){
+  try{return JSON.parse(localStorage.getItem(TRIPS_KEY))||{};}catch(e){return{};}
+}
+function setTrips(t){try{localStorage.setItem(TRIPS_KEY,JSON.stringify(t));}catch(e){}}
+function getActiveId(){return localStorage.getItem(ACTIVE_KEY)||null;}
+function setActiveId(id){if(id)localStorage.setItem(ACTIVE_KEY,id);else localStorage.removeItem(ACTIVE_KEY);}
+
+// ── Firebase sync helpers ─────────────────────────────────────────────────────
+function initFirebase(){
+  if(!FIREBASE_CONFIG.apiKey||FIREBASE_CONFIG.apiKey==='YOUR_API_KEY')return false;
+  try{
+    try{firebase.app();}catch(e){firebase.initializeApp(FIREBASE_CONFIG);}
+    db=firebase.firestore();
+    return true;
+  }catch(e){console.warn('Firebase init failed:',e);return false;}
+}
+
+function generateCode(){return Math.random().toString(36).substr(2,6).toUpperCase();}
+
+function joinSyncCode(){
+  const inp=document.getElementById('sync-code-input');
+  const code=(inp?inp.value.trim():'').toUpperCase();
+  if(!code){alert('Enter a sync code first.');return;}
+  startSync(code);
+}
+
+function startSync(code){
+  if(!db){updateSyncBar();return;}
+  if(syncUnsubscribe){syncUnsubscribe();syncUnsubscribe=null;}
+  syncCode=code.toUpperCase();
+  syncStatus='connecting';
+  localStorage.setItem('disneyPlanner_syncCode',syncCode);
+  updateSyncBar();
+  const docRef=db.collection('plans').doc(syncCode);
+  syncUnsubscribe=docRef.onSnapshot(snap=>{
+    syncStatus='synced';
+    updateSyncBar();
+    if(snap.exists){
+      const remoteTime=snap.data().updatedAt||0;
+      if(remoteTime>_lastWriteTime+1000){
+        const data=snap.data();
+        applySnapshot(data.snapshot);
+        if(data.trips){setTrips(data.trips);}
+        if(data.activeId){setActiveId(data.activeId);}
+        updateTitleSubtitle();
+        renderCurrentTab();
+      }
+    }
+  },err=>{
+    console.warn('Sync listener error:',err);
+    syncStatus='error';
+    updateSyncBar();
+  });
+}
+
+function stopSync(){
+  if(syncUnsubscribe){syncUnsubscribe();syncUnsubscribe=null;}
+  syncCode=null;
+  syncStatus='idle';
+  localStorage.removeItem('disneyPlanner_syncCode');
+  updateSyncBar();
+}
+
+function copySyncCode(){
+  if(!syncCode)return;
+  navigator.clipboard.writeText(syncCode).then(()=>{
+    const btn=document.getElementById('sync-copy-btn');
+    if(btn){btn.textContent='Copied!';setTimeout(()=>{btn.textContent='Copy code';},2000);}
+  }).catch(()=>{prompt('Your sync code (copy this):',syncCode);});
+}
+
+function renderCurrentTab(){
+  const active=document.querySelector('.section.active');
+  if(!active)return;
+  const id=active.id.replace('tab-','');
+  ({itinerary:renderItinerary,parks:renderParks,ll:renderLL,crowd:renderCrowd,
+    schedule:renderSchedule,optimizer:renderOptimizer,tips:renderTips,shows:renderShows,water:renderWater,
+    hotel:renderHotel,trips:renderTrips}[id]||function(){})();
+}
+
+function updateSyncBar(){
+  const el=document.getElementById('sync-bar');if(!el)return;
+  if(!db){el.innerHTML='';return;}
+  if(!syncCode||syncStatus==='idle'){
+    el.innerHTML=`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:1rem;padding:8px 12px;background:#fff;border:0.5px solid #ddd;border-radius:10px;font-size:12px;color:#666;">
+      <span>☁️ Not synced</span>
+      <button class="smbtn" style="color:#0c447c;border-color:#85b7eb;" onclick="startSync(generateCode())">New code</button>
+      <span style="color:#ccc;">|</span>
+      <input type="text" id="sync-code-input" placeholder="Enter code to join" style="width:120px;font-size:12px;padding:3px 6px;border:0.5px solid #ccc;border-radius:6px;text-transform:uppercase;" maxlength="8"/>
+      <button class="smbtn" onclick="joinSyncCode()">Join</button>
+    </div>`;
+  }else if(syncStatus==='connecting'){
+    el.innerHTML=`<div style="display:flex;gap:8px;align-items:center;margin-bottom:1rem;padding:8px 12px;background:#fff;border:0.5px solid #ddd;border-radius:10px;font-size:12px;color:#888;">
+      <span>⟳ Connecting to ${syncCode}…</span>
+    </div>`;
+  }else if(syncStatus==='synced'){
+    el.innerHTML=`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:1rem;padding:8px 14px;background:#EAF3DE;border:0.5px solid #A3C97A;border-radius:10px;font-size:12px;color:#27500A;">
+      <span>●&nbsp;Synced</span>
+      <strong>Code: ${syncCode}</strong>
+      <span style="color:#4a7a1e;font-size:11px;">Share this code to collaborate</span>
+      <button id="sync-copy-btn" class="smbtn" style="color:#27500A;border-color:#639922;" onclick="copySyncCode()">Copy code</button>
+      <button class="smbtn" style="color:#791F1F;border-color:#E24B4A;" onclick="stopSync()">Disconnect</button>
+    </div>`;
+  }else{
+    el.innerHTML=`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:1rem;padding:8px 12px;background:#FCEBEB;border:0.5px solid #E24B4A;border-radius:10px;font-size:12px;color:#791F1F;">
+      <span>✕ Sync error</span>
+      <button class="smbtn" style="color:#791F1F;border-color:#E24B4A;" onclick="startSync('${syncCode}')">Retry</button>
+      <button class="smbtn" onclick="stopSync()">Disconnect</button>
+    </div>`;
+  }
+}
+
+function saveState(){
+  try{
+    const snap=currentSnapshot();
+    const id=getActiveId();
+    if(id){
+      const trips=getTrips();
+      if(trips[id]){trips[id].snapshot=snap;trips[id].updated=Date.now();setTrips(trips);}
+    }
+    // Also persist as scratch so unsaved edits survive refresh
+    localStorage.setItem('disneyPlanner',JSON.stringify(snap));
+    // Push to Firestore if synced
+    if(db&&syncCode){
+      _lastWriteTime=Date.now();
+      db.collection('plans').doc(syncCode).set({snapshot:snap,trips:getTrips(),activeId:getActiveId()||null,updatedAt:_lastWriteTime})
+        .catch(e=>console.warn('Firebase write error:',e));
+    }
+  }catch(e){}
+}
+
+function loadState(){
+  try{
+    // Prefer the active named trip if one is set
+    const id=getActiveId();
+    if(id){
+      const trips=getTrips();
+      if(trips[id]){applySnapshot(trips[id].snapshot);return;}
+    }
+    // Fall back to scratch state
+    const raw=localStorage.getItem('disneyPlanner');
+    if(raw)applySnapshot(JSON.parse(raw));
+  }catch(e){}
+}
+
+// ── Trips UI ───────────────────────────────────────────────────────
+function renderTrips(){
+  const el=document.getElementById('tab-trips');
+  const trips=getTrips();
+  const activeId=getActiveId();
+  const ids=Object.keys(trips).sort((a,b)=>trips[b].created-trips[a].created);
+  el.innerHTML=`<h2>My Trips</h2>
+  <div class="tip-box">Save your current itinerary & Lightning Lane plan as a named trip. Load any saved trip to switch back to it.</div>
+  <div class="card">
+    <h3 style="margin-bottom:10px;">Save current plan as a new trip</h3>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <input type="text" id="trip-name-input" placeholder="e.g. Summer 2026" style="flex:1;min-width:160px;"
+        onkeydown="if(event.key==='Enter')saveTripFromInput()"/>
+      <button class="smbtn" style="color:#27500A;border-color:#639922;padding:5px 14px;font-size:13px;" onclick="saveTripFromInput()">Save trip</button>
+    </div>
+  </div>
+  ${ids.length===0?'<div style="font-size:13px;color:#999;">No saved trips yet.</div>':ids.map(id=>{
+    const t=trips[id];
+    const isActive=id===activeId;
+    const created=new Date(t.created).toLocaleDateString('default',{month:'short',day:'numeric',year:'numeric'});
+    const updated=new Date(t.updated).toLocaleDateString('default',{month:'short',day:'numeric'});
+    const dayCount=t.snapshot.days?t.snapshot.days.length:0;
+    const parks=[...new Set((t.snapshot.days||[]).map(d=>d.park))].map(pid=>{const p=pById(pid);return p?p.icon:'';}).join(' ');
+    return`<div class="trip-card${isActive?' active-trip':''}">
+      <div style="flex:1;">
+        <div class="trip-name">${escHtml(t.name)}${isActive?'<span class="badge badge-blue" style="margin-left:8px;font-size:10px;">active</span>':''}</div>
+        <div class="trip-meta">${dayCount} day${dayCount!==1?'s':''} · ${parks} · saved ${created} · edited ${updated}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        ${!isActive?`<button class="smbtn" style="color:#0c447c;border-color:#85b7eb;" onclick="loadTrip('${id}')">Load</button>`:`<button class="smbtn" style="color:#0c447c;border-color:#85b7eb;" onclick="saveCurrentToTrip('${id}')">Update</button>`}
+        <button class="smbtn" onclick="renameTrip('${id}')">Rename</button>
+        <button class="smbtn" style="color:#791F1F;border-color:#E24B4A;" onclick="deleteTrip('${id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('')}`;
+}
+
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function saveTripFromInput(){
+  const input=document.getElementById('trip-name-input');
+  const name=(input?input.value:'').trim();
+  if(!name){alert('Enter a name for this trip.');return;}
+  const id='trip_'+Date.now();
+  const trips=getTrips();
+  trips[id]={name,created:Date.now(),updated:Date.now(),snapshot:currentSnapshot()};
+  setTrips(trips);
+  setActiveId(id);
+  // Also flush to scratch
+  saveState();
+  renderTrips();
+}
+
+function saveCurrentToTrip(id){
+  const trips=getTrips();
+  if(!trips[id])return;
+  trips[id].snapshot=currentSnapshot();
+  trips[id].updated=Date.now();
+  setTrips(trips);
+  saveState();
+  renderTrips();
+}
+
+function loadTrip(id){
+  const trips=getTrips();
+  if(!trips[id])return;
+  if(!confirm('Load "'+trips[id].name+'"? Your current unsaved changes will be replaced.'))return;
+  applySnapshot(trips[id].snapshot);
+  setActiveId(id);
+  updateTitleSubtitle();
+  // Persist loaded state to scratch without overwriting the stored trip snapshot
+  const snap=currentSnapshot();
+  localStorage.setItem('disneyPlanner',JSON.stringify(snap));
+  if(db&&syncCode){
+    _lastWriteTime=Date.now();
+    db.collection('plans').doc(syncCode)
+      .set({snapshot:snap,trips:getTrips(),activeId:id,updatedAt:_lastWriteTime})
+      .catch(e=>console.warn('Firebase write error:',e));
+  }
+  // Return to itinerary
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab')[0].classList.add('active');
+  document.getElementById('tab-itinerary').classList.add('active');
+  renderItinerary();
+}
+
+function renameTrip(id){
+  const trips=getTrips();
+  if(!trips[id])return;
+  const n=prompt('Rename trip:',trips[id].name);
+  if(!n||!n.trim())return;
+  trips[id].name=n.trim();
+  trips[id].updated=Date.now();
+  setTrips(trips);
+  saveState();
+  renderTrips();
+}
+
+function deleteTrip(id){
+  const trips=getTrips();
+  if(!trips[id])return;
+  if(!confirm('Delete "'+trips[id].name+'"? This cannot be undone.'))return;
+  delete trips[id];
+  setTrips(trips);
+  if(getActiveId()===id)setActiveId(null);
+  saveState();
+  renderTrips();
+}
+
+document.addEventListener("DOMContentLoaded", function(){
+  loadState();
+  renderItinerary();
+  updateTitleSubtitle();
+
+  // Firebase sync
+  if(initFirebase()){
+    const savedCode=localStorage.getItem('disneyPlanner_syncCode');
+    if(savedCode)startSync(savedCode);
+    else updateSyncBar();
+  }else{
+    updateSyncBar();
+  }
+
+  // PWA: Register service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(function(err) {
+      console.warn('Service worker registration failed:', err);
+    });
+  }
+});
+</script>
+</body>
+</html>

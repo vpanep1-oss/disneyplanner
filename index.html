@@ -560,8 +560,8 @@ function updDay(id,k,v){const d=days.find(x=>x.id===id);if(d)d[k]=v;saveState();
 function removeDay(id){days=days.filter(d=>d.id!==id);saveState();renderItinerary();}
  
 // ── Plan modal ──────────────────────────────────────────────────────────────
-function showAddToPlanModal(label,icon,type,llBadge,suggestedTime,tip){
-  _planPending={label,icon,type,llBadge,tip:tip||''};
+function showAddToPlanModal(label,icon,type,llBadge,suggestedTime,tip,parkId){
+  _planPending={label,icon,type,llBadge,tip:tip||'',parkId:parkId||''};
   document.getElementById('plan-modal-title').innerHTML=(icon?icon+' ':'')+`<strong>${label}</strong>`;
   const sel=document.getElementById('plan-modal-day');
   sel.innerHTML=days.map(d=>{const p=pById(d.park);const ds=d.date?` — ${new Date(d.date+'T12:00:00').toLocaleDateString('default',{month:'short',day:'numeric'})}`:'';return`<option value="${d.id}">${d.label}${ds}${p?' ('+p.short+')':''}`;}).join('');
@@ -588,7 +588,7 @@ function submitAddToPlan(){
   // format time for display
   const[hh,mm]=timeVal.split(':');const h=parseInt(hh);const ampm=h>=12?'PM':'AM';const h12=h%12||12;
   const displayTime=`${h12}:${mm} ${ampm}`;
-  day.plan.push({id:Date.now(),time:timeVal,displayTime,label:_planPending.label,icon:_planPending.icon||'',type:_planPending.type||'',llBadge:_planPending.llBadge||'',note:noteVal});
+  day.plan.push({id:Date.now(),time:timeVal,displayTime,label:_planPending.label,icon:_planPending.icon||'',type:_planPending.type||'',llBadge:_planPending.llBadge||'',note:noteVal,parkId:_planPending.parkId||''});
   day.plan.sort((a,b)=>a.time.localeCompare(b.time));
   saveState();
   closeAddToPlanModal();
@@ -637,7 +637,7 @@ function renderParks(){
         <div style="display:flex;gap:6px;align-items:center;">
           ${r.llType==='SP'?'<span class="badge badge-amber">Single Pass</span>':r.mllTier===1?'<span class="badge badge-purple">MLL Tier 1</span>':r.mllTier===2?'<span class="badge" style="background:#E1F5EE;color:#085041;">MLL Tier 2</span>':'<span class="badge badge-gray">MLL</span>'}
           ${r.wait?`<span style="font-size:12px;color:#666;">~${r.wait}m</span>`:''}
-          <button class="smbtn" onclick="showAddToPlanModal('${r.name.replace(/'/g,"\\x27")}','\uD83C\uDFA2','ride','${r.llType||''}','09:00','')" style="font-size:11px;color:#0c447c;border-color:#85b7eb;">+ Plan</button>
+          <button class="smbtn" onclick="showAddToPlanModal('${r.name.replace(/'/g,"\\x27")}','\uD83C\uDFA2','ride','${r.llType||''}','09:00','','${park.id}')" style="font-size:11px;color:#0c447c;border-color:#85b7eb;">+ Plan</button>
         </div>
       </div>`).join('')}
     </div>`;
@@ -725,7 +725,7 @@ function renderLLRides(){
             ${isSP?`<button class="ll-btn${selSP?' sel-ias':''}" onclick="setLL('${park.id}',${idx},'sp')" ${spDisabled&&!selSP?'style="opacity:0.4;cursor:not-allowed;"':''}>Buy SP</button>`
               :`<button class="ll-btn${selMLL?' sel-mll':''}" onclick="setLL('${park.id}',${idx},'mll')" ${mllDisabled&&!selMLL?'style="opacity:0.4;cursor:not-allowed;"':''}>Pre-book MLL</button>`}
             <button class="ll-btn${selNo?' sel-no':''}" onclick="setLL('${park.id}',${idx},'no')">Standby</button>
-            <button class="smbtn" onclick="showAddToPlanModal('${r.name.replace(/'/g,"\\x27")}','\uD83C\uDFA2','ride','${isSP?'SP':'MLL'}','09:00','')" style="font-size:11px;color:#0c447c;border-color:#85b7eb;">+ Plan</button>
+            <button class="smbtn" onclick="showAddToPlanModal('${r.name.replace(/'/g,"\\x27")}','\uD83C\uDFA2','ride','${isSP?'SP':'MLL'}','09:00','','${park.id}')" style="font-size:11px;color:#0c447c;border-color:#85b7eb;">+ Plan</button>
           </div>
         </div>`;
       }).join('')}
@@ -885,10 +885,19 @@ function renderSchedule(){
         <div style="font-size:13px;">Nothing planned yet for ${activeDay?activeDay.label:'this day'}.</div>
         <div style="font-size:12px;margin-top:4px;">Use <strong>+ Plan</strong> on rides, Lightning Lanes, or Shows to build your day.</div>
       </div>`;
-      return plan.map(item=>{
-        const llB=item.llBadge?`<span class="badge ${item.llBadge==='MLL'?'badge-purple':item.llBadge==='SP'?'badge-amber':'badge-gray'}" style="font-size:10px;">⚡ ${item.llBadge}</span>`:'';
-        return`<div class="plan-item"><span class="plan-item-time">${item.displayTime||item.time}</span><div class="plan-item-dot"></div><div class="plan-item-body"><div>${item.icon?item.icon+' ':''}<strong>${item.label}</strong> ${llB}</div>${item.note?`<div class="plan-item-note">${item.note}</div>`:''}</div><button class="smbtn" onclick="removePlanItem(${activeDay.id},${item.id})" style="color:#A32D2D;border-color:#E24B4A;font-size:11px;padding:2px 6px;">✕</button></div>`;
-      }).join('');
+      const renderItem=item=>{const llB=item.llBadge?`<span class="badge ${item.llBadge==='MLL'?'badge-purple':item.llBadge==='SP'?'badge-amber':'badge-gray'}" style="font-size:10px;">⚡ ${item.llBadge}</span>`:'';return`<div class="plan-item"><span class="plan-item-time">${item.displayTime||item.time}</span><div class="plan-item-dot"></div><div class="plan-item-body"><div>${item.icon?item.icon+' ':''}<strong>${item.label}</strong> ${llB}</div>${item.note?`<div class="plan-item-note">${item.note}</div>`:''}</div><button class="smbtn" onclick="removePlanItem(${activeDay.id},${item.id})" style="color:#A32D2D;border-color:#E24B4A;font-size:11px;padding:2px 6px;">✕</button></div>`;};
+      if(!activeDay||!activeDay.hop)return plan.map(renderItem).join('');
+      const primaryPark=pById(activeDay.park);const hopPark=pById(activeDay.hop);
+      const primaryItems=plan.filter(item=>!item.parkId||item.parkId===activeDay.park);
+      const hopItems=plan.filter(item=>item.parkId===activeDay.hop);
+      const parkHeader=(p,isHop)=>`<div style="display:flex;align-items:center;gap:6px;padding:8px 0 6px;font-size:12px;font-weight:600;color:#555;border-bottom:0.5px solid #e8e6e2;margin-bottom:4px;">${p.icon} ${p.name}${isHop?' <span style="font-size:11px;font-weight:400;color:#888;margin-left:2px;">· park hop</span>':''}</div>`;
+      let html='';
+      html+=parkHeader(primaryPark,false);
+      html+=primaryItems.length?primaryItems.map(renderItem).join(''):`<div style="font-size:12px;color:#aaa;padding:8px 0 4px;">No rides added for ${primaryPark.name} yet.</div>`;
+      html+=`<div style="margin-top:10px;"></div>`;
+      html+=parkHeader(hopPark,true);
+      html+=hopItems.length?hopItems.map(renderItem).join(''):`<div style="font-size:12px;color:#aaa;padding:8px 0 4px;">No rides added for ${hopPark.name} yet.</div>`;
+      return html;
     })()}
   </div>`:'<div class="tip-box">Add a day to your itinerary to see your plan here.</div>'}`;
 }
@@ -1084,7 +1093,7 @@ function renderShows(){
               <div style="font-size:13px;font-weight:500;">${s.name} ${llBadge}</div>
               <div style="display:flex;gap:6px;flex-wrap:wrap;margin:5px 0;align-items:center;">
                 ${s.times.map(t=>`<span style="font-size:11px;background:#F1EFE8;color:#444;padding:2px 8px;border-radius:20px;">${t}</span>`).join('')}
-                <button class="smbtn" onclick="showAddToPlanModal('${s.name.replace(/'/g,"\\x27")}','${s.icon}','show','${s.llType||''}','${s.times&&s.times[0]?s.times[0]:'09:00'}','')" style="font-size:11px;color:#0c447c;border-color:#85b7eb;">+ Plan</button>
+                <button class="smbtn" onclick="showAddToPlanModal('${s.name.replace(/'/g,"\\x27")}','${s.icon}','show','${s.llType||''}','${s.times&&s.times[0]?s.times[0]:'09:00'}','','${park.id}')" style="font-size:11px;color:#0c447c;border-color:#85b7eb;">+ Plan</button>
               </div>
               <div style="font-size:12px;color:#666;">${s.tip}</div>
             </div>

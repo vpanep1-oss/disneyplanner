@@ -144,7 +144,20 @@ select,input[type=text],input[type=date]{font-size:13px;padding:5px 8px;border-r
     </div>
   </div>
 </div>
- 
+<div id="note-modal-overlay" onclick="_noteModalBgClick(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;align-items:center;justify-content:center;">
+  <div id="note-modal-box" style="background:#fff;border-radius:14px;padding:20px;width:min(92vw,360px);box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+    <div style="font-size:15px;font-weight:600;margin-bottom:14px;">📝 Add Note to Plan</div>
+    <label class="plan-modal-label">Note</label>
+    <input type="text" id="note-modal-text" class="plan-modal-field" placeholder="e.g. Dinner at Be Our Guest, meet Mickey..."/>
+    <label class="plan-modal-label">Time</label>
+    <input type="time" id="note-modal-time" class="plan-modal-field" value="12:00"/>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button onclick="submitAddScheduleNote()" style="flex:1;padding:10px;background:#0c447c;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;">Add to plan</button>
+      <button onclick="closeAddScheduleNote()" style="flex:1;padding:10px;background:#f5f4f0;color:#444;border:none;border-radius:8px;font-size:13px;cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ── Firebase config — replace the YOUR_* values with your own from Firebase Console ──
 const FIREBASE_CONFIG={
@@ -557,6 +570,7 @@ function renderItinerary(){
   </div>`;
 }
 function updDay(id,k,v){const d=days.find(x=>x.id===id);if(d)d[k]=v;saveState();renderItinerary();}
+function saveDayNote(id,val){const d=days.find(x=>x.id===id);if(d){d.note=val;saveState();}}
 function removeDay(id){days=days.filter(d=>d.id!==id);saveState();renderItinerary();}
  
 // ── Plan modal ──────────────────────────────────────────────────────────────
@@ -878,6 +892,7 @@ function renderSchedule(){
       <strong>${transitIcon(tr.mode)} from ${tr.hotelName||'your resort'}</strong>${activeHotelData?` ${activeHotelData.icon}`:''} — ${tr.time} · ${tr.freq}<br/>
       <span style="font-size:12px;opacity:0.85;">${tr.tip}</span>
     </div>`:''}
+    ${activeDay?`<div style="margin-bottom:12px;"><input type="text" id="sched-day-note-${activeDay.id}" placeholder="📝 Day note — dinner reservations, reminders, anything..." value="${(activeDay.note||'').replace(/"/g,'&quot;')}" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1.5px solid #e0ddd6;border-radius:8px;font-size:13px;color:#333;background:#faf9f6;" onblur="saveDayNote(${activeDay.id},this.value)"/></div>`:''}
     ${(()=>{
       const plan=(activeDay&&activeDay.plan)||[];
       if(!plan.length)return`<div style="text-align:center;padding:24px 0;color:#999;">
@@ -899,10 +914,31 @@ function renderSchedule(){
       html+=hopItems.length?hopItems.map(renderItem).join(''):`<div style="font-size:12px;color:#aaa;padding:8px 0 4px;">No rides added for ${hopPark.name} yet.</div>`;
       return html;
     })()}
+    ${activeDay?`<div style="margin-top:12px;padding-top:10px;border-top:1px solid #f0ede6;"><button onclick="showAddScheduleNote(${activeDay.id})" style="background:#faf9f6;border:1.5px dashed #c8c4bc;color:#555;border-radius:8px;padding:7px 14px;font-size:12px;cursor:pointer;width:100%;text-align:center;">📝 Add a note to this day's plan</button></div>`:''}
   </div>`:'<div class="tip-box">Add a day to your itinerary to see your plan here.</div>'}`;
 }
 function switchSchedDay(id){schedDay=id;renderSchedule();}
 function switchGuideDay(id){schedDay=id;renderGuide();}
+let _noteModalDayId=null;
+function showAddScheduleNote(dayId){_noteModalDayId=dayId;document.getElementById('note-modal-text').value='';const now=new Date();const hh=String(now.getHours()).padStart(2,'0');const mm=String(now.getMinutes()).padStart(2,'0');document.getElementById('note-modal-time').value=`${hh}:${mm}`;const ov=document.getElementById('note-modal-overlay');ov.style.display='flex';}
+function _noteModalBgClick(e){if(e.target.id==='note-modal-overlay')closeAddScheduleNote();}
+function closeAddScheduleNote(){document.getElementById('note-modal-overlay').style.display='none';_noteModalDayId=null;}
+function submitAddScheduleNote(){
+  if(!_noteModalDayId)return;
+  const text=document.getElementById('note-modal-text').value.trim();
+  if(!text)return;
+  const timeVal=document.getElementById('note-modal-time').value;
+  const day=days.find(d=>d.id===_noteModalDayId);
+  if(!day)return;
+  if(!day.plan)day.plan=[];
+  const[hh,mm]=timeVal.split(':');const h=parseInt(hh);const ampm=h>=12?'PM':'AM';const h12=h%12||12;
+  const displayTime=`${h12}:${mm} ${ampm}`;
+  day.plan.push({id:Date.now(),time:timeVal,displayTime,label:text,icon:'📝',type:'note',llBadge:'',note:'',parkId:''});
+  day.plan.sort((a,b)=>a.time.localeCompare(b.time));
+  saveState();
+  closeAddScheduleNote();
+  renderSchedule();
+}
 
 function renderGuide(){
   const el=document.getElementById('tab-guide');
